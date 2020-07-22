@@ -1,5 +1,5 @@
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2020-07-21 19:12:45.741
+-- Last modification date: 2020-07-22 13:29:54.052
 
 -- tables
 -- Table: admin
@@ -91,6 +91,16 @@ CREATE TABLE product_type (
     CONSTRAINT product_type_pk PRIMARY KEY (id)
 );
 
+-- Table: shop_details
+CREATE TABLE shop_details (
+    id int NOT NULL,
+    shop_name varchar(128) NOT NULL,
+    details text NULL,
+    address text NOT NULL,
+    admin_id int NOT NULL,
+    CONSTRAINT shop_details_pk PRIMARY KEY (id)
+);
+
 -- Table: status_catalog
 CREATE TABLE status_catalog (
     id int NOT NULL,
@@ -169,6 +179,10 @@ ALTER TABLE product ADD CONSTRAINT product_product_type FOREIGN KEY product_prod
 -- Reference: product_units (table: product)
 ALTER TABLE product ADD CONSTRAINT product_units FOREIGN KEY product_units (unit_id)
     REFERENCES units (id);
+
+-- Reference: shop_details_admin (table: shop_details)
+ALTER TABLE shop_details ADD CONSTRAINT shop_details_admin FOREIGN KEY shop_details_admin (admin_id)
+    REFERENCES admin (id);
 
 -- Reference: stock_product (table: stock)
 ALTER TABLE stock ADD CONSTRAINT stock_product FOREIGN KEY stock_product (product_id)
