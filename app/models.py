@@ -1,5 +1,9 @@
+from flask import current_app, request, url_for
+from datetime import datetime
 from . import db
-
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+import hashlib
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # product Models
 
@@ -8,7 +12,7 @@ class Product(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   product_name =  db.Column(db.String(128), unique=True, nullable=False)
   product_description = db.Column(db.String(255), nullable=False)
-  price_per_unit = db.Column(db.Float,nullable=False)
+  price_per_unit = db.Column(db.Numeric(10,3),nullable=False)
 
   product_type_id = db.Column(db.Integer,db.ForeignKey('product_type.id'), nullable=False)
   unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=False)
@@ -19,16 +23,85 @@ class Product(db.Model):
   def __repr__(self):
     return f"Product({self.product_name})"
 
+  def to_json(self):
+       json_unit = {
+           'url': url_for('api.get_product', id=self.id),
+           'product_name': self.product_name,
+           'product_description': self.product_description,
+           'price_per_unit': str(self.price_per_unit),
+           'unit': self.unit_id,
+           'product_type': self.product_type_id,
+           'in_stock' : self.stock_details
+       }
+       return json_unit
+  
+  @staticmethod
+  def from_json(json_post):
+    name = json_post.get('product_name')
+    description = json_post.get('product_description')
+    price = json_post.get('price_per_unit')
+    unit_id = json_post.get('unit_id')
+    product_type_id = json_post.get('product_type_id')
+
+    if (name is None or name == ''):
+        raise ValidationError('doesnot have a name')
+
+    if (price is None or price == ''):
+        raise ValidationError('doesnot have a price')
+    
+    if (unit_id is None or unit_id == ''):
+        raise ValidationError('doesnot have a unit id')
+    
+    if (product_type_id is None or product_type_id == ''):
+        raise ValidationError('doesnot have a product type id')
+    
+    product_type = ProductType.query.filter_by(id=int(product_type_id)).first()
+    unit = Unit.query.filter_by(id=int(unit_id)).first()
+
+    if(product_type is None or unit is None):
+       raise ValidationError('invalid product type or unit')
+
+    return Product(product_name=name,
+                  product_description =  description,
+                  price_per_unit = float(price),
+                  unit_items = unit,
+                  product_items = product_type)
+
+
+
 class Unit(db.Model):
   __tablename__ = "units"
   id = db.Column(db.Integer, primary_key=True)
   unit_name =  db.Column(db.String(64), unique=True, nullable=False)
   unit_short =  db.Column(db.String(8), unique=True, nullable=True)
 
-  products = db.relationship('Product', backref='items', lazy=True)
+  ref_products = db.relationship('Product', backref='unit_items', lazy=True)
 
   def __repr__(self):
     return f"unit({self.unit_name} {self.unit_short})"
+  
+  def get_unit(self,id):
+    pass
+  
+  def to_json(self):
+       json_unit = {
+           'url': url_for('api.get_unit', id=self.id),
+           'unit_name': self.unit_name,
+           'unit_short': self.unit_short,
+           'products_count': self.ref_products
+       }
+       return json_unit
+  
+  @staticmethod
+  def from_json(json_post):
+    name = json_post.get('unit_name')
+    short = json_post.get('unit_short')
+    if (name is None or name == ''):
+        raise ValidationError('doesnot have a name')
+
+    return Unit(unit_name =name, unit_short =short)
+
+  
 
 
 class ProductType(db.Model):
@@ -36,17 +109,33 @@ class ProductType(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   type_name =  db.Column(db.String(64), unique=True, nullable=False)
 
-  products = db.relationship('Product', backref='items', lazy=True)
+  ref_products = db.relationship('Product', backref='product_items', lazy=True)
 
   def __repr__(self):
     return f"Product_type({self.type_name})"
+
+  
+  def to_json(self):
+        json_productType = {
+            'url': url_for('api.get_category', id=self.id),
+            'category_name': self.type_name,
+            'products_count': [element.to_json() for element in self.ref_products]
+        }
+        return json_productType
+  
+  @staticmethod
+  def from_json(json_post):
+    name = json_post.get('type_name')
+    if (name is None or name == ''):
+        raise ValidationError('doesnot have a name')
+    return ProductType(type_name =name)
 
 class Stock(db.Model):
   __tablename__ = "stock"
   product_id = db.Column(db.Integer, db.ForeignKey('products.id'), primary_key=True)
  
-  in_stock = db.Column(db.Numeric(10,3),nullable=False)
-  last_update_time = db.Column(db.DateTime,unique=True ,nullable=False)
+  in_stock = db.Column(db.Integer,nullable=False)
+  last_update_time = db.Column(db.DateTime,unique=True ,nullable=False,default=datetime.utcnow)
 
   def __repr__(self):
     return f"Stock({self.product_id})"
@@ -65,52 +154,6 @@ class ShopDetails(db.Model):
 
   def __repr__(self):
     return f"ShopDetails:\nName:{self.shop_name}\ncontact:{self.contact_phone}\naddress:{self.address}"
-
-class Customer(db.Model):
-  __tablename__ = "customer"
-  id = db.Column(db.Integer, primary_key=True)
-
-  first_name =  db.Column(db.String(128), nullable=False)
-  last_name =  db.Column(db.String(128), nullable=True)
-
-  contact_email =  db.Column(db.String(128), unique=False, nullable=True)
-  contact_phone =  db.Column(db.String(10), unique=True, nullable=False)
-
-  customer_address =  db.Column(db.Text, nullable=False)
-  delivery_address =  db.Column(db.Text, nullable=True)
-
-  ref_orders = db.relationship('PlacedOrder',backref='orders',lazy=True)
-
-  def __repr__(self):
-    return f"Customer:\nName:{self.first_name} {self.last_name}\ncontant:{self.contact_email},{self.contact_phone}\naddress:{self.customer_address}"
-
-class Employee(db.Model):
-  __tablename__ = "employee"
-  id = db.Column(db.Integer, primary_key=True)
-
-  first_name =  db.Column(db.String(128), nullable=False)
-  last_name =  db.Column(db.String(128), nullable=True)
-  contact_phone =  db.Column(db.String(10), unique=True, nullable=False)
-
-  ref_delivery = db.relationship('Delivery',backref="deliveries")
-  def __repr__(self):
-    return f"Employee: \nid:{self.id}\nName:{self.first_name} {self.last_name}\nConatact:{self.contact_phone}"
-
-class Admin(db.Model):
-  __tablename__ = "admin"
-  id = db.Column(db.Integer, primary_key=True)
-
-  first_name =  db.Column(db.String(64), nullable=False)
-  last_name =  db.Column(db.String(64), nullable=True)
-
-  username = db.Column(db.String(128), unique=True, nullable=False)
-  password_hash = db.Column(db.String(128),unique = True,nullable=False)
-
-  ref_store = db.relationship('ShopDetails',backref='stores')
-
-  def __repr__(self):
-    return f"Admin:\nName:{self.first_name} {self.last_name}\nUserName:{self.username}"
-
 
 
 class OrderedItem(db.Model):
@@ -142,11 +185,11 @@ class PlacedOrder(db.Model):
   def __repr__(self):
     return f"PlacedOrder: id:{self.id}\ntime_place:{self.time_placed}\ndelivert_address:{self.delivery_address}"
   
-class OderStatus(db.Model):
+class OrderStatus(db.Model):
   __tablename__ = "order_status"
   id = db.Column(db.Integer, primary_key=True)
 
-  status_time = db.Column(db.DateTime,unique=True, nullable=False)
+  status_time = db.Column(db.DateTime,unique=True, nullable=False,default=datetime.utcnow)
   details = db.Column(db.Text,nullable=True)
   status_catalog_id =  db.Column(db.Integer,db.ForeignKey('status_catalog.id'), nullable=False)
 
@@ -176,5 +219,109 @@ class Delivery(db.Model):
 
   def __repr__(self):
     return f"Delivery:\n id : {self.id}\ntime:{self.delivery_time_placed}\noder_id:{self.placed_order_id}"
+
+
+
+
+
+
+
+
+class Customer(db.Model):
+  __tablename__ = "customer"
+  id = db.Column(db.Integer, primary_key=True)
+
+  first_name =  db.Column(db.String(128), nullable=False)
+  last_name =  db.Column(db.String(128), nullable=True)
+
+  contact_email =  db.Column(db.String(128), unique=False, nullable=True)
+  contact_phone =  db.Column(db.String(10), unique=True, nullable=False)
+
+  customer_address =  db.Column(db.Text, nullable=False)
+  delivery_address =  db.Column(db.Text, nullable=True)
+
+  ref_orders = db.relationship('PlacedOrder',backref='orders',lazy=True)
+
+  def __repr__(self):
+    return f"Customer:\nName:{self.first_name} {self.last_name}\ncontant:{self.contact_email},{self.contact_phone}\naddress:{self.customer_address}"
+
+class Employee(db.Model):
+  __tablename__ = "employee"
+  id = db.Column(db.Integer, primary_key=True)
+
+  first_name =  db.Column(db.String(128), nullable=False)
+  last_name =  db.Column(db.String(128), nullable=True)
+  contact_phone =  db.Column(db.String(10), unique=True, nullable=False)
+
+  ref_delivery = db.relationship('Delivery',backref="deliveries")
+  def __repr__(self):
+    return f"Employee: \nid:{self.id}\nName:{self.first_name} {self.last_name}\nConatact:{self.contact_phone}"
+
+
+
+class Admin(db.Model):
+  __tablename__ = "admin"
+  id = db.Column(db.Integer, primary_key=True)
+
+  first_name =  db.Column(db.String(64), nullable=False)
+  last_name =  db.Column(db.String(64), nullable=True)
+
+  username = db.Column(db.String(128), unique=True, nullable=False)
+  password_hash = db.Column(db.String(128),unique = True,nullable=False)
+
+  ref_store = db.relationship('ShopDetails',backref='stores')
+
+  @property
+  def password(self):
+    raise AttributeError('password is not a readable attribute')
+
+  @password.setter
+  def password(self, password):
+    self.password_hash = generate_password_hash(password)
+  
+  def verify_password(self, password):
+    return check_password_hash(self.password_hash, password)
+
+ 
+  def generate_auth_token(self, expiration):
+    s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
+    return s.dumps({'id': self.id}).decode('utf-8')
+  
+  @staticmethod
+  def verify_auth_token(token):
+    s = Serializer(current_app.config['SECRET_KEY'])
+    try:
+      data = s.loads(token)
+    except:
+      return None
+    return Admin.query.get(data['id'])
+
+
+  def generate_reset_token(self, expiration=3600):
+      s = Serializer(current_app.config['SECRET_KEY'], expiration)
+      return s.dumps({'reset': self.id}).decode('utf-8')
+
+  @staticmethod
+  def reset_password(token, new_password):
+      s = Serializer(current_app.config['SECRET_KEY'])
+      try:
+          data = s.loads(token.encode('utf-8'))
+      except:
+          return False
+      user = Admin.query.get(data.get('reset'))
+      if user is None:
+          return False
+      user.password = new_password
+      db.session.add(user)
+      return True
+
+  def __repr__(self):
+    return f"Admin:\nName:{self.first_name} {self.last_name}\nUserName:{self.username}"
+
+  
+
+
+
+
 
 
