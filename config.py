@@ -6,6 +6,7 @@ class Config:
     SQLALCHEMY_COMMIT_ON_TEARDOWN = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JSON_AS_ASCII = False
+    UPLOAD_FOLDER = os.path.join(basedir, 'static', 'product_images')
 
     # FLASKY_MAIL_SUBJECT_PREFIX = '[Flasky]'
     # FLASKY_MAIL_SENDER = 'Flasky Admin <flasky@example.com>'

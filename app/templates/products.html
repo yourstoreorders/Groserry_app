@@ -1,0 +1,127 @@
+{% extends "dashboard_base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block  content%}
+
+<div class="container-fluid mb-2 text-right">
+  {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      {{ message }}
+    </div>
+    {% endfor %}
+  <button type="button" class="btn btn-primary " data-toggle="modal" data-target="#add_model" >Add Product</button>
+</div>
+
+<div class="card">
+  <div class="card-body">
+
+    <div class="table-responsive">
+      <table class="table product_table">
+        <thead>
+          <tr>
+            <th scope="col">id</th>
+            <th scope="col">image</th>
+            <th scope="col">Name</th>
+            <th scope="col">Stock</th>
+            <th scope="col">Unit</th>
+            <th scope="col">Price</th>
+            <th scope="col">Category</th>
+            <th scope="col">Description</th>
+            <th scope="col">Update</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          {% for product in products %}
+            <tr>
+              <td scope="row" name="id">{{product.id}}</td>
+              <td > <img src="{{url_for('static',filename='product_images',_external=True)}}/{{product.product_image}}" class=" img-fluid rounded img-thumbnail" style="width: 100px;" alt="Cinque Terre"></td>
+              <td>{{product.product_name}}</td>
+              <td>{{product.stock_details[0].in_stock}}</td>
+              <td name='{{product.unit_id}}'>{{product.unit_items.unit_name}}</td>
+              <td >{{product.price_per_unit}}</td>
+              <td name='{{product.product_type_id}}'>{{product.product_items.type_name}}</td>
+              <td>{{product.product_description }}</td>
+              <td><button type="button" class="btn btn-primary update_button" data-toggle="modal" data-target="#update_model" >Update</button></td>
+              <td><button type="button" class="btn btn-warning delete_button" data-toggle="modal" data-target="#delete_model" >Delete</button></td>
+
+            </tr>
+          {% endfor %}
+          
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+{% block add_model %}
+<div class="modal fade" id="add_model" tabindex="-1" role="dialog" aria-labelledby="add_modelLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="add_modelLabel">Add New Product</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {{wtf.quick_form(add_form)}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <!-- <button type="button" class="btn btn-primary">Send message</button> -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block update_model %}
+<div class="modal fade" id="update_model" tabindex="-1" role="dialog" aria-labelledby="update_modelLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="update_modelLabel">Update Product</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {{wtf.quick_form(update_form)}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <!-- <button type="button" class="btn btn-primary">Send message</button> -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block delete_model %}
+<div class="modal fade" id="delete_model" tabindex="-1" role="dialog" aria-labelledby="delete_modelLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="delete_modelLabel">Delete Product</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {{wtf.quick_form(delete_form)}}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+  
+{% endblock %}
+

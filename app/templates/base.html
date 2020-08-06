@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  {% block head %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <!-- Our Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_style.css') }}">
+    <!-- Scrollbar Custom CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.min.css">
+    <title>{% block title %}{% endblock %} Grocery</title>
+
+
+  {% endblock %}
+</head>
+
+<body>
+  {% block  body%}
+
+  {% endblock %}
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
+  </script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
+  </script>
+
+  <!-- jQuery Custom Scroller CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
+
+  <script type="text/javascript">
+      $(document).ready(function () {
+
+          $("#sidebar").mCustomScrollbar({
+              theme: "minimal"
+          });
+
+          $('#sidebarCollapse').on('click', function () {
+              $('#sidebar, #content').toggleClass('active');
+              $('.collapse.in').toggleClass('in');
+              $('a[aria-expanded=true]').attr('aria-expanded', 'false');
+          });
+
+          
+
+          // for product page
+
+          $('.product_table tbody').on('click','.update_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+            
+            var product_id = row.find('td:eq(0)').text()
+            var product_name = row.find('td:eq(2)').text()
+            var stock = row.find('td:eq(3)').text()
+            var unit = row.find('td:eq(4)').attr("name");
+            var price = row.find('td:eq(5)').text()
+            var category = row.find('td:eq(6)').attr("name");
+            var description = row.find('td:eq(7)').text()
+            
+            $("#update_model").find('#product_id')[0].value = product_id
+            $("#update_model").find('#product_name')[0].value = product_name
+            $("#update_model").find('#product_description')[0].value = description
+            $("#update_model").find('#stock')[0].value = stock
+            $("#update_model").find('#price_per_unit')[0].value = price
+            $("#update_model").find('#unit_id')[0].value = unit
+            $("#update_model").find('#product_type_id')[0].value = category
+
+          });
+
+          $('.product_table tbody').on('click','.delete_button',function(){
+
+              var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+              var product_id = row.find('td:eq(0)').text()
+              var product_name = row.find('td:eq(2)').text()
+
+
+              $("#delete_model").find('#product_id')[0].value = product_id
+              $("#delete_model").find('#product_name')[0].value = product_name
+
+              });
+
+
+            // For category page
+
+          $('.category_table tbody').on('click','.update_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+            var type_id = row.find('td:eq(0)').text()
+            var type_name = row.find('td:eq(1)').text()
+
+
+            $("#update_model").find('#type_id')[0].value = type_id
+            $("#update_model").find('#type_name')[0].value = type_name
+
+          });
+
+          $('.category_table tbody').on('click','.delete_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+            var type_id = row.find('td:eq(0)').text()
+            var type_name = row.find('td:eq(1)').text()
+
+
+            $("#delete_model").find('#type_id')[0].value = type_id
+            $("#delete_model").find('#type_name')[0].value = type_name
+
+          });
+      });
+  </script>
+</body>
+
+</html>

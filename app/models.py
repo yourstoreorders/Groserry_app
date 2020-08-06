@@ -1,9 +1,18 @@
+import os
 from flask import current_app, request, url_for
 from datetime import datetime
-from . import db
+from . import db, login_manager
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Admin.query.get(int(user_id))
+
 
 # product Models
 
@@ -13,28 +22,74 @@ class Product(db.Model):
   product_name =  db.Column(db.String(128), unique=True, nullable=False)
   product_description = db.Column(db.String(255), nullable=False)
   price_per_unit = db.Column(db.Numeric(10,3),nullable=False)
+  product_image = db.Column(db.String(256),nullable=False)
 
   product_type_id = db.Column(db.Integer,db.ForeignKey('product_type.id'), nullable=False)
   unit_id = db.Column(db.Integer, db.ForeignKey('units.id'), nullable=False)
   
-  stock_details = db.relationship('Stock', backref='stock_details', lazy=True)
+
+  stock_details = db.relationship('Stock', cascade="all,delete", backref='stock_details', lazy=True)
 
 
-  def __repr__(self):
-    return f"Product({self.product_name})"
+  # def __repr__(self):
+  #   return f"Product({self.product_name})"
 
+  @property
+  def get_product(self):
+    return Product.query.join(Unit).all()
+  
   def to_json(self):
+       print(self.stock_details[0].in_stock)
        json_unit = {
            'url': url_for('api.get_product', id=self.id),
            'product_name': self.product_name,
+           'product_image': os.path.join(url_for('static',filename='product_images',_external=True)\
+              , self.product_image),
            'product_description': self.product_description,
            'price_per_unit': str(self.price_per_unit),
            'unit': self.unit_id,
            'product_type': self.product_type_id,
-           'in_stock' : self.stock_details
+           'in_stock' : self.stock_details[0].in_stock
        }
        return json_unit
   
+  @staticmethod
+  def from_dict(dict_post):
+    name = dict_post['product_name']
+    description = dict_post['product_description']
+    price = dict_post['price_per_unit']
+    unit_id = dict_post['unit_id']
+    product_type_id = dict_post['product_type_id']
+    product_image = dict_post['product_image']
+
+    if (name is None or name == ''):
+        raise ValidationError('doesnot have a name')
+
+    if (price is None or price == ''):
+        raise ValidationError('doesnot have a price')
+    
+    if (unit_id is None or unit_id == ''):
+        raise ValidationError('doesnot have a unit id')
+    
+    if (product_type_id is None or product_type_id == ''):
+        raise ValidationError('doesnot have a product type id')
+    
+    if (product_image is None or product_image == ''):
+        raise ValidationError('doesnot have a image')
+    
+    product_type = ProductType.query.filter_by(id=int(product_type_id)).first()
+    unit = Unit.query.filter_by(id=int(unit_id)).first()
+
+    if(product_type is None or unit is None):
+       raise ValidationError('invalid product type or unit')
+
+    return Product(product_name=name,
+                  product_description =  description,
+                  price_per_unit = float(price),
+                  unit_items = unit,
+                  product_items = product_type,
+                  product_image = product_image)
+
   @staticmethod
   def from_json(json_post):
     name = json_post.get('product_name')
@@ -81,7 +136,7 @@ class Unit(db.Model):
     return f"unit({self.unit_name} {self.unit_short})"
   
   def get_unit(self,id):
-    pass
+    return Unit.query.filter_by(id=id).first
   
   def to_json(self):
        json_unit = {
@@ -129,6 +184,14 @@ class ProductType(db.Model):
     if (name is None or name == ''):
         raise ValidationError('doesnot have a name')
     return ProductType(type_name =name)
+  
+  @staticmethod
+  def from_dict(dict_post):
+    name = dict_post['type_name']
+    if (name is None or name == ''):
+        raise ValidationError('doesnot have a name')
+    return ProductType(type_name =name)
+
 
 class Stock(db.Model):
   __tablename__ = "stock"
@@ -139,6 +202,11 @@ class Stock(db.Model):
 
   def __repr__(self):
     return f"Stock({self.product_id})"
+
+  @property
+  def get_stockUnits(self):
+    return self.in_stock
+
 
 class ShopDetails(db.Model):
   __tablename__ = "shop_details"
@@ -223,10 +291,6 @@ class Delivery(db.Model):
 
 
 
-
-
-
-
 class Customer(db.Model):
   __tablename__ = "customer"
   id = db.Column(db.Integer, primary_key=True)
@@ -259,7 +323,7 @@ class Employee(db.Model):
 
 
 
-class Admin(db.Model):
+class Admin(db.Model,UserMixin):
   __tablename__ = "admin"
   id = db.Column(db.Integer, primary_key=True)
 
