@@ -62,3 +62,19 @@ class DeleteCategory(FlaskForm):
   type_name   = StringField('Name', validators=[DataRequired(), Length(1, 64)],render_kw={'readonly':'true'})
   
   submit3 = SubmitField('Delete Category')
+
+
+
+# Order Forms
+
+class UpdateOrder(FlaskForm):
+  order_id = IntegerField('Id',validators=[DataRequired()], render_kw={'readonly':'true'})
+  order_status = SelectField('Status',choices=[],coerce= int)
+
+  submit2 = SubmitField('Update Order')
+
+class DeleteOrder(FlaskForm):
+  order_id = IntegerField('Id',validators=[DataRequired()], render_kw={'readonly':'true'})
+  order_from = StringField('Name', validators=[DataRequired(), Length(1, 64)],render_kw={'readonly':'true'})
+  
+  submit3 = SubmitField('Delete Order')

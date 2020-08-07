@@ -130,7 +130,7 @@ class Unit(db.Model):
   unit_name =  db.Column(db.String(64), unique=True, nullable=False)
   unit_short =  db.Column(db.String(8), unique=True, nullable=True)
 
-  ref_products = db.relationship('Product', backref='unit_items', lazy=True)
+  ref_products = db.relationship('Product',backref='unit_items', lazy=True)
 
   def __repr__(self):
     return f"unit({self.unit_name} {self.unit_short})"
@@ -233,26 +233,79 @@ class OrderedItem(db.Model):
 
   product_id =  db.Column(db.Integer,db.ForeignKey('products.id'),nullable=False)
   placed_order_id = db.Column(db.Integer,db.ForeignKey('placed_order.id'),nullable=False)
+  
   def __repr__(self):
     return f"OrderedItem: id:{self.id}\nquantity:{self.quantity}\nprice:{self.price}"
+
+  def to_json(self):
+    json_unit = {
+          'product_id': self.product_id,
+          'quantity': self.quantity,
+          'placed_order_id':self.placed_order_id,
+       }
+    return json_unit
+
+  
+  
+  @staticmethod
+  def from_json(post_json,placed_order_id):
+    quantity = post_json.get('quantity')
+    price = post_json.get('price')
+
+    product_id = post_json.get('product_id')
+
+    return OrderedItem(quantity = quantity, price = price , product_id = product_id, placed_order_id = placed_order_id)
+
 
 class PlacedOrder(db.Model):
   __tablename__ = "placed_order"
   id = db.Column(db.Integer, primary_key=True)
 
-  time_placed = db.Column(db.DateTime,unique= True,nullable=False)
+  time_placed = db.Column(db.DateTime,unique=True, nullable = True,default=datetime.utcnow)
   details = db.Column(db.Text,nullable=True)
   delivery_address = db.Column(db.Text,nullable=False)
 
-  customer_id = db.Column(db.Integer,db.ForeignKey('customer.id'),nullable=False)
+  customer_name = db.Column(db.String(128), nullable=False)
+
+  customer_contact_phone = db.Column(db.String(10), nullable=False)
+  customer_address = db.Column(db.Text, nullable=False)
+  customer_address_pin = db.Column(db.String(6),nullable=False)
+
+  # customer_id = db.Column(db.Integer,db.ForeignKey('customer.id'),nullable=False)
   order_status_id =  db.Column(db.Integer,db.ForeignKey('order_status.id'),nullable=False)
   
 
-  ref_items = db.relationship('OrderedItem', backref='items', lazy=True)
+  ref_items = db.relationship('OrderedItem',cascade="all,delete", backref='items', lazy=True)
 
   def __repr__(self):
     return f"PlacedOrder: id:{self.id}\ntime_place:{self.time_placed}\ndelivert_address:{self.delivery_address}"
   
+  @staticmethod
+  def from_json(post_json,order_status_id):
+    details = post_json.get('details')
+    delivery_address = post_json.get('delivery_address')
+
+    customer_name = post_json.get('customer_details').get('customer_name')
+    customer_contact_phone = post_json.get('customer_details').get('contact_phone')
+    customer_address = post_json.get('customer_details').get('contact_address')
+    customer_address_pin = post_json.get('customer_details').get('address_pin') 
+
+    return PlacedOrder(details = details, delivery_address = delivery_address,\
+      customer_name= customer_name, customer_contact_phone= customer_contact_phone ,\
+      customer_address = customer_address,customer_address_pin = customer_address_pin,\
+      order_status_id = order_status_id)
+  
+  def to_json(self):
+       json_unit = {
+           'order_id': self.id,
+           'time_placed': self.time_placed,
+           'details': self.details,
+           'delivery_address': self.delivery_address,
+           'ordered_items': [element.to_json() for element in self.ref_items]
+       }
+       return json_unit
+
+
 class OrderStatus(db.Model):
   __tablename__ = "order_status"
   id = db.Column(db.Integer, primary_key=True)
@@ -263,63 +316,114 @@ class OrderStatus(db.Model):
 
   def __repr__(self):
     return f"OrderStatus:\nid:{self.id}\ndetails:{self.details}"
+  
+  @staticmethod
+  def from_data(status_catalog_id,details=""):
+    return OrderStatus(details = details,status_catalog_id = status_catalog_id )
+
 
 class StatusCatalog(db.Model):
   __tablename__ = "status_catalog"
   id = db.Column(db.Integer, primary_key=True)
   status_name = db.Column(db.String(128),nullable=False)
 
-
   ref_orders = db.relationship('OrderStatus', backref='orders', lazy=True)
 
   def __repr__(self):
     return f"StatusCatalog ({self.status_name})"
+  
+  @staticmethod
+  def new_id():
+    return StatusCatalog.query.filter_by(status_name = "new order").first()
+  
+  @staticmethod
+  def delivered_id():
+    return StatusCatalog.query.filter_by(status_name = "delivered").first()
+  
 
-class Delivery(db.Model):
-  __tablename__ = "delivery"
-  id = db.Column(db.Integer, primary_key=True)
-  delivery_time_placed = db.Column(db.DateTime,unique= True, nullable=False)
-  delivery_time_actual = db.Column(db.DateTime,unique = True, nullable=True)
-  notes = db.Column(db.Text,nullable=True)
+# class Delivery(db.Model):
+#   __tablename__ = "delivery"
+#   id = db.Column(db.Integer, primary_key=True)
+#   delivery_time_placed = db.Column(db.DateTime,unique= True, nullable=False)
+#   delivery_time_actual = db.Column(db.DateTime,unique = True, nullable=True)
+#   notes = db.Column(db.Text,nullable=True)
 
-  placed_order_id = db.Column(db.Integer, db.ForeignKey('placed_order.id'),nullable=False)
-  employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'),nullable=True)
+#   placed_order_id = db.Column(db.Integer, db.ForeignKey('placed_order.id'),nullable=False)
+#   employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'),nullable=True)
 
-  def __repr__(self):
-    return f"Delivery:\n id : {self.id}\ntime:{self.delivery_time_placed}\noder_id:{self.placed_order_id}"
-
-
+#   def __repr__(self):
+#     return f"Delivery:\n id : {self.id}\ntime:{self.delivery_time_placed}\noder_id:{self.placed_order_id}"
 
 
-class Customer(db.Model):
-  __tablename__ = "customer"
-  id = db.Column(db.Integer, primary_key=True)
 
-  first_name =  db.Column(db.String(128), nullable=False)
-  last_name =  db.Column(db.String(128), nullable=True)
 
-  contact_email =  db.Column(db.String(128), unique=False, nullable=True)
-  contact_phone =  db.Column(db.String(10), unique=True, nullable=False)
+# class Customer(db.Model):
+#   __tablename__ = "customer"
+#   id = db.Column(db.Integer, primary_key=True)
 
-  customer_address =  db.Column(db.Text, nullable=False)
-  delivery_address =  db.Column(db.Text, nullable=True)
+#   first_name =  db.Column(db.String(128), nullable=False)
+#   last_name =  db.Column(db.String(128), nullable=True)
 
-  ref_orders = db.relationship('PlacedOrder',backref='orders',lazy=True)
+#   contact_email =  db.Column(db.String(128), unique=False, nullable=True)
+#   contact_phone =  db.Column(db.String(10), unique=True, nullable=False)
 
-  def __repr__(self):
-    return f"Customer:\nName:{self.first_name} {self.last_name}\ncontant:{self.contact_email},{self.contact_phone}\naddress:{self.customer_address}"
+#   customer_address =  db.Column(db.Text, nullable=False)
+#   delivery_address =  db.Column(db.Text, nullable=True)
 
-class Employee(db.Model):
-  __tablename__ = "employee"
-  id = db.Column(db.Integer, primary_key=True)
+#   ref_orders = db.relationship('PlacedOrder',backref='orders',lazy=True)
 
-  first_name =  db.Column(db.String(128), nullable=False)
-  last_name =  db.Column(db.String(128), nullable=True)
-  contact_phone =  db.Column(db.String(10), unique=True, nullable=False)
+#   def __repr__(self):
+#     return f"Customer:\nName:{self.first_name} {self.last_name}\ncontant:{self.contact_email},{self.contact_phone}\naddress:{self.customer_address}"
 
-  ref_delivery = db.relationship('Delivery',backref="deliveries")
-  def __repr__(self):
-    return f"Employee: \nid:{self.id}\nName:{self.first_name} {self.last_name}\nConatact:{self.contact_phone}"
+#   def to_json(self):
+#         json_customer = {
+#             # 'url': url_for('api.edit_customer', id=self.id),
+#             'customer_id':self.id,
+#             'category_name': self.first_name+" " + self.last_name,
+#             # 'products_count': [element.to_json() for element in self.ref_products]
+#         }
+#         return json_customer
+  
+#   @staticmethod
+#   def from_json(json_post):
+#     first_name = json_post.get('first_name')
+#     last_name = json_post.get('last_name')
+#     contact_email = json_post.get('contact_email')
+#     contact_phone = json_post.get('contact_phone')
+#     customer_address = json_post.get('customer_address')
+
+#     delivery_address = json_post.get('delivery_address')
+
+
+#     if (first_name is None or first_name == ''):
+#         raise ValidationError('doesnot have a first_name')
+#     if (last_name is None or last_name == ''):
+#         raise ValidationError('doesnot have a last_name')
+
+#     if (contact_phone is None or contact_phone == ''):
+#         raise ValidationError('doesnot have a contact_phone')
+    
+#     if (customer_address is None or customer_address == ''):
+#         raise ValidationError('doesnot have a customer_address')
+    
+      
+#     return Customer(first_name = first_name, last_name = last_name,\
+#       contact_email = contact_email,contact_phone= contact_phone,\
+#         customer_address= customer_address,delivery_address = delivery_address)
+
+
+
+# class Employee(db.Model):
+#   __tablename__ = "employee"
+#   id = db.Column(db.Integer, primary_key=True)
+
+#   first_name =  db.Column(db.String(128), nullable=False)
+#   last_name =  db.Column(db.String(128), nullable=True)
+#   contact_phone =  db.Column(db.String(10), unique=True, nullable=False)
+
+#   ref_delivery = db.relationship('Delivery',backref="deliveries")
+#   def __repr__(self):
+#     return f"Employee: \nid:{self.id}\nName:{self.first_name} {self.last_name}\nConatact:{self.contact_phone}"
 
 
 

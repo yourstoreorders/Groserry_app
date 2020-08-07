@@ -6,8 +6,11 @@ from flask import request, redirect, url_for, session , flash
 from flask import render_template, jsonify
 from . import main
 from .. import db
-from .. models import Admin,Product,Unit,ProductType, Stock
-from . forms import LoginForm, AddProduct, UpdateProduct, DeleteProduct , AddCategory,UpdateCategory, DeleteCategory
+from .. models import Admin,Product,Unit,ProductType, Stock ,PlacedOrder, OrderStatus, StatusCatalog
+from . forms import LoginForm, AddProduct, UpdateProduct, DeleteProduct,\
+  AddCategory,UpdateCategory, DeleteCategory, \
+  DeleteOrder, UpdateOrder
+  
 
 from flask_login import login_required,logout_user, login_user, current_user
 
@@ -59,6 +62,8 @@ def save_picture(form_picture):
 
   return picture_filename
 
+def delete_picture(picture_filename):
+  os.remove(os.path.join("app/" +url_for('static',filename="product_images"),picture_filename))
 
 @main.route('/products', methods=['GET', 'POST'])
 @login_required
@@ -115,7 +120,10 @@ def products():
     element.product_name = update_form_data.get('product_name', element.product_name)
     
     if(picture_file !=""):
+      old_product_image = element.product_image
       element.product_image = update_form_data.get("product_new_image")
+
+      delete_picture(old_product_image)
     
     element.product_description = update_form_data.get('product_description', element.product_description)
     
@@ -144,15 +152,18 @@ def products():
       delete_form_data[items.id] = items.data
 
     element = Product.query.get_or_404(delete_form_data["product_id"])
-    
+    old_product_image = element.product_image
+
     try:
+      
       db.session.delete(element)
       db.session.commit()
     except exc.SQLAlchemyError as e:
       db.session.rollback()
       flash("Could not delete, Something went wrong","danger")
     else:
-       flash('Product Deleted',"success")
+      delete_picture(old_product_image)
+      flash('Product Deleted',"success")
 
     
     flash('Product Deleted')
@@ -232,7 +243,63 @@ def categories():
 
   return render_template('categories.html',categories = categories,add_form = add_form, update_form = update_form, delete_form = delete_form )
 
+
+
+
+# orders
 @main.route('/orders', methods=['GET', 'POST'])
 @login_required
 def orders():
-  return render_template('orders.html',name = current_user.username)
+  orders = PlacedOrder.query.join(OrderStatus, PlacedOrder.order_status_id == OrderStatus.id).\
+    filter(OrderStatus.status_catalog_id == StatusCatalog.new_id().id).all()
+
+  update_form = UpdateOrder()
+
+  update_form.order_status.choices = [(status.id, status.status_name) for status in StatusCatalog.query.all()]
+
+  delete_form = DeleteOrder()
+
+
+
+  if update_form.submit2.data and update_form.validate_on_submit():
+
+    update_form_data = dict()
+    for items in update_form:
+      update_form_data[items.id] = items.data
+
+    order  = PlacedOrder.query.get_or_404(update_form_data["order_id"])
+    orderStatus = OrderStatus.query.get_or_404(order.order_status_id)
+    
+    orderStatus.status_catalog_id = update_form_data.get('order_status', orderStatus.status_catalog_id)
+    
+    db.session.add(orderStatus)
+    db.session.commit()
+  
+
+    flash('Order Updated')
+
+    return redirect(url_for('main.orders'))
+
+  
+
+  if delete_form.submit3.data and delete_form.validate_on_submit():
+
+    delete_form_data = dict()
+    for items in delete_form:
+      delete_form_data[items.id] = items.data
+
+    element = PlacedOrder.query.get_or_404(delete_form_data["order_id"])
+    
+    try:
+      db.session.delete(element)
+      db.session.commit()
+    except exc.SQLAlchemyError as e:
+      db.session.rollback()
+      flash("Could not delete, Something went wrong")
+    else:
+      flash('Order Deleted')
+
+    return redirect(url_for('main.orders'))
+
+
+  return render_template('orders.html',orders = orders,update_form = update_form, delete_form = delete_form)

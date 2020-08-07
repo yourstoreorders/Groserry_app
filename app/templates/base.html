@@ -115,6 +115,34 @@
             $("#delete_model").find('#type_name')[0].value = type_name
 
           });
+
+
+
+          // for order page
+
+
+          $('.order_table tbody').on('click','.update_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+            var order_id = row.find('td:eq(0)').text()
+            
+
+            $("#update_model").find('#order_id')[0].value = order_id
+
+          });
+
+          $('.order_table tbody').on('click','.delete_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+            var order_id = row.find('td:eq(0)').text()
+            var customer_name = row.find('td:eq(4)').text()
+
+
+            $("#delete_model").find('#order_id')[0].value = order_id
+            $("#delete_model").find('#order_from')[0].value = customer_name
+
+          });
       });
   </script>
 </body>
