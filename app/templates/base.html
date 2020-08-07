@@ -143,6 +143,38 @@
             $("#delete_model").find('#order_from')[0].value = customer_name
 
           });
+
+
+          $('.order_table tbody').on('click','.view_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+            var order_id = row.find('td:eq(0)').text()
+
+            
+
+            fetch('/order_items/'+  order_id).then(function(response) {
+              response.json().then((data)=>{
+                $('.order_items_table').find('tbody').empty();
+                
+                data['items'].forEach(item => {
+                  $('#order_items_table').last().append(
+                    "<tr>"+
+                    "<td scope='row' name='id'>"+item['product_id']+"</td>"+
+                    "<td>"+item['product_name']+"</td>"+
+                    "<td>"+item['quantity']+"</td>"+
+                    "<td>"+item['price']+"</td>"+
+                    "</tr>"
+                  );
+                  console.log(data["total_amount"])
+                  $('#total').html(data['total_amount']);
+                });
+                
+              })
+            })
+
+          });
+
       });
   </script>
 </body>

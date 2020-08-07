@@ -6,7 +6,7 @@ from flask import request, redirect, url_for, session , flash
 from flask import render_template, jsonify
 from . import main
 from .. import db
-from .. models import Admin,Product,Unit,ProductType, Stock ,PlacedOrder, OrderStatus, StatusCatalog
+from .. models import Admin,Product,Unit,ProductType, Stock ,PlacedOrder, OrderStatus, StatusCatalog, OrderedItem
 from . forms import LoginForm, AddProduct, UpdateProduct, DeleteProduct,\
   AddCategory,UpdateCategory, DeleteCategory, \
   DeleteOrder, UpdateOrder
@@ -303,3 +303,74 @@ def orders():
 
 
   return render_template('orders.html',orders = orders,update_form = update_form, delete_form = delete_form)
+
+
+@main.route('/order_items/<int:order_id>', methods=['GET'])
+@login_required
+def order_items(order_id):
+  
+  # it = db.session.query(Product, OrderedItem).outerjoin(Product, OrderedItem,Product.id == OrderedItem.product_id ).all()
+  
+  
+  # items = Product.query.join(OrderedItem, OrderedItem.product_id == Product.id).\
+  #   filter_by(placed_order_id = order_id).all()
+  # items = OrderedItem.query.filter_by(placed_order_id = order_id).all()
+
+  items = db.session.query(OrderedItem.quantity,OrderedItem.price,Product.id, Product.product_name,Product.price_per_unit).join(Product,OrderedItem.product_id == Product.id ).\
+    filter(OrderedItem.placed_order_id == order_id).all()
+
+  responseObj = {}
+  
+  itemList = []
+  total_amount = 0.0
+
+  for item in items:
+    itemObj = {}
+    itemObj['product_id'] = item.id
+    itemObj['product_name'] = item.product_name
+    itemObj['quantity'] = item.quantity
+    price = float(item.quantity) * float(item.price_per_unit)
+    total_amount += price
+    itemObj['price']  = str(price)
+
+    itemList.append(itemObj)
+  
+  responseObj['items'] = itemList  
+  responseObj['total_amount'] = total_amount
+  
+  return jsonify(responseObj)
+
+
+
+@main.route('/old_orders', methods=['GET', 'POST'])
+@login_required
+def old_orders():
+  orders = PlacedOrder.query.join(OrderStatus, PlacedOrder.order_status_id == OrderStatus.id).\
+    filter(OrderStatus.status_catalog_id == StatusCatalog.old_id().id).all()
+
+
+  delete_form = DeleteOrder()
+
+  
+
+  if delete_form.submit3.data and delete_form.validate_on_submit():
+
+    delete_form_data = dict()
+    for items in delete_form:
+      delete_form_data[items.id] = items.data
+
+    element = PlacedOrder.query.get_or_404(delete_form_data["order_id"])
+    
+    try:
+      db.session.delete(element)
+      db.session.commit()
+    except exc.SQLAlchemyError as e:
+      db.session.rollback()
+      flash("Could not delete, Something went wrong")
+    else:
+      flash('Order Deleted')
+
+    return redirect(url_for('main.old_orders'))
+
+
+  return render_template('old_orders.html',orders = orders, delete_form = delete_form)

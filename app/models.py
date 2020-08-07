@@ -29,7 +29,7 @@ class Product(db.Model):
   
 
   stock_details = db.relationship('Stock', cascade="all,delete", backref='stock_details', lazy=True)
-
+  ordered_items = db.relationship('OrderedItem',cascade="all,delete", backref='ordered_items', lazy=True)
 
   # def __repr__(self):
   #   return f"Product({self.product_name})"
@@ -337,7 +337,7 @@ class StatusCatalog(db.Model):
     return StatusCatalog.query.filter_by(status_name = "new order").first()
   
   @staticmethod
-  def delivered_id():
+  def old_id():
     return StatusCatalog.query.filter_by(status_name = "delivered").first()
   
 
