@@ -23,7 +23,6 @@ def deploy():
   """Run deployment tasks."""
   from flask_migrate import upgrade
 
-
   # migrate database to latest revision
   upgrade()
   db.create_all()
