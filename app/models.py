@@ -42,13 +42,14 @@ class Product(db.Model):
        print(self.stock_details[0].in_stock)
        json_unit = {
            'url': url_for('api.get_product', id=self.id),
+           'product_id':self.id,
            'product_name': self.product_name,
            'product_image': os.path.join(url_for('static',filename='product_images',_external=True)\
               , self.product_image),
            'product_description': self.product_description,
            'price_per_unit': str(self.price_per_unit),
-           'unit': self.unit_id,
-           'product_type': self.product_type_id,
+           'unit': Unit.get_unit(self.unit_id).unit_name,
+           'product_type': ProductType.get_productType(self.product_type_id).type_name,
            'in_stock' : self.stock_details[0].in_stock
        }
        return json_unit
@@ -135,8 +136,9 @@ class Unit(db.Model):
   def __repr__(self):
     return f"unit({self.unit_name} {self.unit_short})"
   
-  def get_unit(self,id):
-    return Unit.query.filter_by(id=id).first
+  @staticmethod
+  def get_unit(id):
+    return Unit.query.filter_by(id=id).first()
   
   def to_json(self):
        json_unit = {
@@ -168,6 +170,10 @@ class ProductType(db.Model):
 
   def __repr__(self):
     return f"Product_type({self.type_name})"
+
+  @staticmethod
+  def get_productType(id):
+    return ProductType.query.filter_by(id=id).first()
 
   
   def to_json(self):
@@ -301,7 +307,14 @@ class PlacedOrder(db.Model):
            'time_placed': self.time_placed,
            'details': self.details,
            'delivery_address': self.delivery_address,
-           'ordered_items': [element.to_json() for element in self.ref_items]
+           'delivery_address_pin':self.customer_address_pin,
+           'ordered_items': [element.to_json() for element in self.ref_items],
+           'customer_details': {
+              'customer_name': self.customer_name,
+              'customer_contact_phone':self.customer_contact_phone,
+              'customer_address':self.customer_address,
+              'customer_address_pin':self.customer_address_pin,
+           }
        }
        return json_unit
 

@@ -8,8 +8,19 @@ class Config:
     JSON_AS_ASCII = False
     UPLOAD_FOLDER = os.path.join(basedir, 'static', 'product_images')
 
-    # FLASKY_MAIL_SUBJECT_PREFIX = '[Flasky]'
-    # FLASKY_MAIL_SENDER = 'Flasky Admin <flasky@example.com>'
+
+    MAIL_SERVER = 'smtp.googlemail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = os.environ.get('MAIL_USR')
+    MAIL_PASSWORD = os.environ.get('MAIL_PD')
+    
+    MAIL_DEFAULT_SENDER = ('MyStore','MyStore@Anvayagrocery.com')
+
+    GROCERY_MAIL_SUBJECT_PREFIX = ''
+    FLASKY_MAIL_SENDER = 'Grocery Store'
+    ORDER_MAIL_RECEIVER = os.environ.get('ORDER_MAIL_RECEIVER')
+    
     # FLASKY_ADMIN = os.environ.get('GROCERY_APP_ADMIN')
     
     @staticmethod
@@ -20,11 +31,6 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    # MAIL_SERVER = 'smtp.googlemail.com'
-    # MAIL_PORT = 587
-    # MAIL_USE_TLS = True
-    # MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    # MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
     'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')
 
