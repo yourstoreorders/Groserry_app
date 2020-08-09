@@ -265,7 +265,7 @@ def orders():
 
 
   if update_form.submit2.data and update_form.validate_on_submit():
-
+    
     update_form_data = dict()
     for items in update_form:
       update_form_data[items.id] = items.data
@@ -273,18 +273,24 @@ def orders():
     order  = PlacedOrder.query.get_or_404(update_form_data["order_id"])
     orderStatus = OrderStatus.query.get_or_404(order.order_status_id)
     
-    orderStatus.status_catalog_id = update_form_data.get('order_status', orderStatus.status_catalog_id)
     
+    orderStatus.status_catalog_id = update_form_data.get('order_status', orderStatus.status_catalog_id)
     if(orderStatus.status_catalog_id == StatusCatalog.old_id().id):
       for item in order.ref_items:
         stock = Stock.query.filter_by(product_id = item.product_id).first()
         
         if stock is not None:
-            stock.in_stock = 0 if (stock.in_stock - item.quantity <= 0) else stock.in_stock - item.quantity
-            db.session.add(stock)
+            if(stock.in_stock < item.quantity):
+              flash('Someting went wrong! Stock in sufficeint!')
+              return redirect(url_for('main.orders'))
+            else:
+              stock.in_stock = 0 if (stock.in_stock - item.quantity <= 0) else stock.in_stock - item.quantity
+              db.session.add(stock)
+        else:
+          flash('Someting went wrong!')
+          return redirect(url_for('main.orders'))
 
-      db.session.commit()
-
+    
 
     db.session.add(orderStatus)
     db.session.commit()
