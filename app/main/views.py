@@ -275,6 +275,17 @@ def orders():
     
     orderStatus.status_catalog_id = update_form_data.get('order_status', orderStatus.status_catalog_id)
     
+    if(orderStatus.status_catalog_id == StatusCatalog.old_id().id):
+      for item in order.ref_items:
+        stock = Stock.query.filter_by(product_id = item.product_id).first()
+        
+        if stock is not None:
+            stock.in_stock = 0 if (stock.in_stock - item.quantity <= 0) else stock.in_stock - item.quantity
+            db.session.add(stock)
+
+      db.session.commit()
+
+
     db.session.add(orderStatus)
     db.session.commit()
   
