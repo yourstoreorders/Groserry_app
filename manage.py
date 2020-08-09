@@ -27,6 +27,9 @@ def deploy():
   upgrade()
   db.create_all()
 
+  StatusCatalog.insert_order_status()
+  Unit.insert_units()
+
 
 
 @manager.command

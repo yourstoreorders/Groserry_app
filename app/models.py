@@ -157,6 +157,32 @@ class Unit(db.Model):
         raise ValidationError('doesnot have a name')
 
     return Unit(unit_name =name, unit_short =short)
+  
+  @staticmethod
+  def insert_units():
+    units = [
+      {'unit_name':'Kilogram','unit_short':'kg'},
+      {'unit_name':'Gram','unit_short':'gram'},
+      {'unit_name':'Milligram','unit_short':'mg'},
+      {'unit_name':'Liter','unit_short':'L'},
+      {'unit_name':'Milliliter','unit_short':'ml'},
+      {'unit_name':'Dozen','unit_short':'dz'},
+      {'unit_name':'Packet','unit_short':'pkt'},
+      {'unit_name':'Package','unit_short':'pkg'},
+      {'unit_name':'Bag','unit_short':'bg'},
+      {'unit_name':'Box','unit_short':'bx'},
+      {'unit_name':'Meter','unit_short':'m'},
+      {'unit_name':'Centimeter','unit_short':'cm'},
+      {'unit_name':'Millimeter','unit_short':'mm'}
+    ]
+
+    for u in units:
+        unit = Unit.query.filter_by(unit_name=u['unit_name']).first()
+        if unit is None:
+            unit = Unit(**u)
+            db.session.add(unit)
+    
+    db.session.commit()
 
   
 
@@ -352,6 +378,22 @@ class StatusCatalog(db.Model):
   @staticmethod
   def old_id():
     return StatusCatalog.query.filter_by(status_name = "delivered").first()
+
+
+  @staticmethod
+  def insert_order_status():
+    status = [
+      {'status_name':'new order'},
+      {'status_name':'delivered'}
+    ]
+
+    for s in status:
+        status = StatusCatalog.query.filter_by(status_name=s['status_name']).first()
+        if status is None:
+            status = StatusCatalog(**s)
+            db.session.add(status)
+    
+    db.session.commit()
   
 
 # class Delivery(db.Model):
