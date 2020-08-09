@@ -1,2 +1,3 @@
-venv
-documentation_data
+venv/
+
+documentation_data/
