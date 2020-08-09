@@ -250,8 +250,11 @@ def categories():
 @main.route('/orders', methods=['GET', 'POST'])
 @login_required
 def orders():
+
   orders = PlacedOrder.query.join(OrderStatus, PlacedOrder.order_status_id == OrderStatus.id).\
     filter(OrderStatus.status_catalog_id == StatusCatalog.new_id().id).all()
+  
+  
 
   update_form = UpdateOrder()
 
