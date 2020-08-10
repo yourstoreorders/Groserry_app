@@ -123,6 +123,6 @@ class ChangeShopDetailForm(FlaskForm):
   shop_email = StringField('Shop Email', validators=[DataRequired(), Length(1, 64),Email()])
   contact_phone = StringField('Phone', validators=[DataRequired(), Length(10,10)])
   details = StringField('Details', validators=[DataRequired(), Length(0,64)])
-  address = StringField('Address', validators=[DataRequired(), Length(0,64)])
+  address = StringField('Address', validators=[DataRequired(), Length(0,255)])
   
   submit3 = SubmitField('Update Shop Details')
