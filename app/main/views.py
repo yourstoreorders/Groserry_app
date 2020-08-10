@@ -260,7 +260,7 @@ def categories():
 def orders():
 
   orders = PlacedOrder.query.join(OrderStatus, PlacedOrder.order_status_id == OrderStatus.id).\
-    filter(OrderStatus.status_catalog_id == StatusCatalog.new_id().id).all()
+    filter(OrderStatus.status_catalog_id == StatusCatalog.new_id().id).all()[::-1]
   
   
 
