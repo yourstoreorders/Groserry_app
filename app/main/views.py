@@ -509,8 +509,8 @@ def settings():
     shop.shop_name = changeShopDetailFormData.get('shop_name', shop.shop_name)
     shop.shop_email = changeShopDetailFormData.get('shop_email', shop.shop_email)
     shop.contact_phone = changeShopDetailFormData.get('contact_phone', shop.contact_phone)
-    shop.details = changeShopDetailFormData.get('shop_details', shop.details)
-    shop.address = changeShopDetailFormData.get('shop_address', shop.address)
+    shop.details = changeShopDetailFormData.get('details', shop.details)
+    shop.address = changeShopDetailFormData.get('address', shop.address)
 
     db.session.add(shop)
     db.session.commit()

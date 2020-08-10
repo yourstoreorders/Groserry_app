@@ -8,7 +8,8 @@
 
       Customer Name: {{data['order_details']['customer_details']['customer_name']}} <br>
       Customer Phone : {{data['order_details']['customer_details']['customer_contact_phone']}} <br>
-      Customer Address : {{data['order_details']['customer_details']['customer_address']}}
+      Customer Address : {{data['order_details']['customer_details']['customer_address']}}<br>
+      Pin : {{data['order_details']['customer_details']['customer_address_pin']}}
       <br>
       <br>
       <b><u>Order Details:</u></b><br>
@@ -48,6 +49,15 @@
         {% endfor %}
       </tbody>
       <tfoot>
+
+        <tr>
+          <th colspan="3">Sub Total :</th>
+          <td id="total">{{data['ordered_items']['sub_total']}}</td>
+        </tr>
+        <tr>
+          <th colspan="3">Delivery Charges:</th>
+          <td id="total">{{data['order_details']['delivery_charge']}}</td>
+        </tr>
         <tr>
           <th colspan="3">Total :</th>
           <td id="total">{{data['ordered_items']['total_amount']}}</td>
