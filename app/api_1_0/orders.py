@@ -2,7 +2,7 @@ from flask import jsonify, request, url_for
 from . import api 
 from . authentication import auth
 from .. import db
-from ..models import OrderStatus, PlacedOrder , OrderedItem ,StatusCatalog, Product
+from ..models import OrderStatus, PlacedOrder , OrderedItem ,StatusCatalog, Product,ShopDetails
 from ..email import send_email
 
 
@@ -28,14 +28,15 @@ def new_order():
     data = {}
     data['order_details'] = newPlacedOrder.to_json()
     data['ordered_items'] = order_items(newPlacedOrder.id)
-    #params:(subject_text, )
-    send_email('New Order Received','email_template',data)
+    data['total_amount'] = float(newPlacedOrder.delivery_charge) + float(data['ordered_items']["sub_total"])
 
-    return jsonify(newPlacedOrder.to_json())
+    shop = ShopDetails.query.all()[0]
+    send_email(shop.shop_email,'New Order Received','email_template',data)
+
+    return jsonify(data)
   
 
 def order_items(order_id):
-
 
   items = db.session.query(OrderedItem.quantity,OrderedItem.price,Product.id, Product.product_name,Product.price_per_unit).join(Product,OrderedItem.product_id == Product.id ).\
     filter(OrderedItem.placed_order_id == order_id).all()
@@ -58,6 +59,6 @@ def order_items(order_id):
   
   responseObj['items'] = itemList
 
-  responseObj['total_amount'] = total_amount
+  responseObj['sub_total'] = total_amount
   
   return responseObj

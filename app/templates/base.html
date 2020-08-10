@@ -166,7 +166,9 @@
                     "<td>"+item['price']+"</td>"+
                     "</tr>"
                   );
-                  console.log(data["total_amount"])
+                  // console.log(data)
+                  $('#sub_total').html(data['sub_total']);
+                  $('#delivery_charge').html(data['delivery_charge']);
                   $('#total').html(data['total_amount']);
                 });
                 
@@ -174,6 +176,40 @@
             })
 
           });
+
+
+          // For category page
+
+          $('.charges_table tbody').on('click','.update_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+            var charge_id = row.find('td:eq(0)').text()
+            var address_pin = row.find('td:eq(1)').text()
+            var amount = row.find('td:eq(2)').text()
+
+
+            $("#update_model").find('#charge_id')[0].value = charge_id
+            $("#update_model").find('#address_pin')[0].value = address_pin
+            $("#update_model").find('#amount')[0].value = amount
+
+          });
+
+          $('.charges_table tbody').on('click','.delete_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+            var charge_id = row.find('td:eq(0)').text()
+            var address_pin = row.find('td:eq(1)').text()
+            var amount = row.find('td:eq(2)').text()
+
+
+            $("#delete_model").find('#charge_id')[0].value = charge_id
+            $("#delete_model").find('#address_pin')[0].value = address_pin
+            $("#delete_model").find('#amount')[0].value = amount
+
+          });
+
 
       });
   </script>

@@ -1,0 +1,114 @@
+{% extends "dashboard_base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block  content%}
+
+
+<div class="container-fluid mb-2 text-right">
+  {% for message in get_flashed_messages() %}
+    <div class="alert alert-warning">
+      <button type="button" class="close" data-dismiss="alert">&times;</button>
+      {{ message }}
+    </div>
+    {% endfor %}
+</div>
+
+<div class="container-fluid">
+
+  <div class="row hidden-md-up">
+    <div class="col-md-4">
+
+      <div class="card">
+        <h5 class="card-header">Change Username</h5>
+        <div class="card-body">
+          <button type="button" class="btn btn-primary " data-toggle="modal" data-target="#change_username_model" >Change Username</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="col-md-4">
+
+      <div class="card">
+        <h5 class="card-header">Change Password</h5>
+        <div class="card-body">
+          <button type="button" class="btn btn-primary " data-toggle="modal" data-target="#change_password_model" >Change Password</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="col-md-4">
+      <div class="card">
+        <h5 class="card-header">Change Shop Details</h5>
+        <div class="card-body">
+          <button type="button" class="btn btn-primary " data-toggle="modal" data-target="#change_shopDetail_model" >Change Shop Details</button>
+        </div>
+      </div>
+    </div>
+  </div><br>
+</div>
+
+
+{% block update_username_modal %}
+<div class="modal fade" id="change_username_model" tabindex="-1" role="dialog" aria-labelledby="update_username_modelLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="add_modelLabel">Update Username</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {{wtf.quick_form(changeUsernameForm)}}
+      </div>
+      
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block update_password_modal %}
+<div class="modal fade" id="change_password_model" tabindex="-1" role="dialog" aria-labelledby="update_password_modelLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="add_modelLabel">Update Password</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {{wtf.quick_form(changePasswordForm)}}
+      </div>
+      
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block update_shopDetail_modal %}
+<div class="modal fade" id="change_shopDetail_model" tabindex="-1" role="dialog" aria-labelledby="update_ShopDetail_modelLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="add_modelLabel">Update Shop Details</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {{wtf.quick_form(changeShopDetailForm)}}
+      </div>
+      
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+
+
+
+{% endblock %}

@@ -6,13 +6,21 @@ from flask import request, redirect, url_for, session , flash
 from flask import render_template, jsonify
 from . import main
 from .. import db
-from .. models import Admin,Product,Unit,ProductType, Stock ,PlacedOrder, OrderStatus, StatusCatalog, OrderedItem
+from .. models import Admin,Product,Unit,ProductType,\
+  Stock ,PlacedOrder, OrderStatus, StatusCatalog, OrderedItem, DeliveryCharge,\
+  ShopDetails
 from . forms import LoginForm, AddProduct, UpdateProduct, DeleteProduct,\
   AddCategory,UpdateCategory, DeleteCategory, \
-  DeleteOrder, UpdateOrder
+  DeleteOrder, UpdateOrder,\
+  AddCharge, UpdateCharge,DeleteCharge,\
+  ChangeUsernameForm, ChangePasswordForm, ChangeShopDetailForm
   
 
 from flask_login import login_required,logout_user, login_user, current_user
+
+@main.context_processor
+def inject_user():
+    return dict(shop_name= ShopDetails.query.all()[0].shop_name)
 
 
 @main.route('/login', methods=['GET', 'POST'])
@@ -335,6 +343,12 @@ def order_items(order_id):
   # items = Product.query.join(OrderedItem, OrderedItem.product_id == Product.id).\
   #   filter_by(placed_order_id = order_id).all()
   # items = OrderedItem.query.filter_by(placed_order_id = order_id).all()
+  order  = PlacedOrder.query.filter_by(id=order_id).first() 
+  if order is None:
+    flash("Invalid order!")
+    return {}
+
+  delivery_charge = order.delivery_charge
 
   items = db.session.query(OrderedItem.quantity,OrderedItem.price,Product.id, Product.product_name,Product.price_per_unit).join(Product,OrderedItem.product_id == Product.id ).\
     filter(OrderedItem.placed_order_id == order_id).all()
@@ -356,7 +370,9 @@ def order_items(order_id):
     itemList.append(itemObj)
   
   responseObj['items'] = itemList  
-  responseObj['total_amount'] = total_amount
+  responseObj['sub_total'] = total_amount
+  responseObj['delivery_charge'] = float(delivery_charge)
+  responseObj['total_amount'] = total_amount  + float(delivery_charge)
   
   return jsonify(responseObj)
 
@@ -394,3 +410,146 @@ def old_orders():
 
 
   return render_template('old_orders.html',orders = orders, delete_form = delete_form)
+
+
+@main.route('/delivery_charges', methods=['GET', 'POST'])
+@login_required
+def delivery_charges():
+  add_form = AddCharge()
+
+  update_form = UpdateCharge()
+
+  delete_form = DeleteCharge()
+
+  charges = DeliveryCharge.query.all()
+
+  if add_form.submit1.data and  add_form.validate_on_submit():
+
+    # print("add form")
+    add_form_data = dict()
+    
+    for items in add_form:
+      add_form_data[items.id] = items.data
+      
+    element = DeliveryCharge.from_dict(add_form_data)
+    db.session.add(element)
+    db.session.commit()
+
+    flash('Delivery Charge Added')
+
+    return redirect(url_for('main.delivery_charges'))
+
+  if update_form.submit2.data and update_form.validate_on_submit():
+
+    # print("update form")
+    update_form_data = dict()
+
+    for items in update_form:
+      update_form_data[items.id] = items.data
+
+    element = DeliveryCharge.query.get_or_404(update_form_data["charge_id"])
+    
+    element.address_pin = update_form_data.get('address_pin', element.address_pin)
+    element.amount = update_form_data.get('amount', element.amount)
+    
+    db.session.add(element)
+    db.session.commit()
+  
+
+    flash('Delivery Charge Updated')
+
+    return redirect(url_for('main.delivery_charges'))
+
+
+  if delete_form.submit3.data and delete_form.validate_on_submit():
+
+    # print("delete called")
+    delete_form_data = dict()
+    for items in delete_form:
+      delete_form_data[items.id] = items.data
+
+    element = DeliveryCharge.query.get_or_404(delete_form_data["charge_id"])
+    
+    try:
+      db.session.delete(element)
+      db.session.commit()
+    except exc.SQLAlchemyError as e:
+      db.session.rollback()
+      flash("Could not delete, Something went wrong")
+    else:
+      flash('Delivery Charge Deleted')
+
+    return redirect(url_for('main.delivery_charges'))
+
+  return render_template('delivery_charges.html',charges = charges,add_form = add_form, update_form = update_form, delete_form = delete_form )
+
+
+
+
+
+@main.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+
+  changeUsernameForm = ChangeUsernameForm()
+  changePasswordForm = ChangePasswordForm()
+
+
+  changeShopDetailForm = ChangeShopDetailForm()
+
+  shop = ShopDetails.query.all()[0]
+  
+  if changeShopDetailForm.submit3.data and changeShopDetailForm.validate_on_submit():
+
+    changeShopDetailFormData= {}
+    for item in changeShopDetailForm:
+      changeShopDetailFormData[item.id] = item.data
+
+
+    shop.shop_name = changeShopDetailFormData.get('shop_name', shop.shop_name)
+    shop.shop_email = changeShopDetailFormData.get('shop_email', shop.shop_email)
+    shop.contact_phone = changeShopDetailFormData.get('contact_phone', shop.contact_phone)
+    shop.details = changeShopDetailFormData.get('shop_name', shop.details)
+    shop.address = changeShopDetailFormData.get('shop_name', shop.address)
+
+    db.session.add(shop)
+    db.session.commit()
+    flash('Your Shop details has been updated.')
+    return redirect(url_for('main.settings'))
+
+  else:
+    changeShopDetailForm = ChangeShopDetailForm(\
+    shop_name = shop.shop_name,shop_email=  shop.shop_email,contact_phone = shop.contact_phone,\
+    details = shop.details,address = shop.address)
+
+
+
+
+  if  changeUsernameForm.submit1.data and changeUsernameForm.validate_on_submit():
+        if current_user.verify_password(changeUsernameForm.password.data):
+            new_username =  changeUsernameForm.username.data.lower()
+            current_user.username = new_username
+            db.session.add(current_user)
+            db.session.commit()
+            flash('Your Username has been updated.')
+            return redirect(url_for('main.settings'))
+        else:
+            flash('Invalid  password.')
+
+
+  if changePasswordForm.submit2.data and changePasswordForm.validate_on_submit():
+        if current_user.verify_password(changePasswordForm.old_password.data):
+            current_user.password = changePasswordForm.password.data
+            db.session.add(current_user)
+            db.session.commit()
+            flash('Your password has been updated.')
+            return redirect(url_for('main.settings'))
+        else:
+            flash('Invalid password.')
+  
+  
+
+  return render_template('settings.html',\
+    changeUsernameForm = changeUsernameForm,\
+      changePasswordForm=changePasswordForm,\
+      changeShopDetailForm= changeShopDetailForm)

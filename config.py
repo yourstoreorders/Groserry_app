@@ -12,14 +12,13 @@ class Config:
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('MAIL_USR')
-    MAIL_PASSWORD = os.environ.get('MAIL_PD')
-    
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')     
     MAIL_DEFAULT_SENDER = ('MyStore','MyStore@Anvayagrocery.com')
 
     GROCERY_MAIL_SUBJECT_PREFIX = ''
     FLASKY_MAIL_SENDER = 'Grocery Store'
-    ORDER_MAIL_RECEIVER = os.environ.get('ORDER_MAIL_RECEIVER') or "madhabsharma94@gmail.com"
+    ORDER_MAIL_RECEIVER = os.environ.get('ORDER_MAIL_RECEIVER')
     
     STORE_NAME = "My Shop Bucket"
     # FLASKY_ADMIN = os.environ.get('GROCERY_APP_ADMIN')

@@ -9,10 +9,10 @@ def send_async_email(app, msg):
         mail.send(msg)
 
 
-def send_email(subject, template, data):
+def send_email(to,subject, template, data):
     app = current_app._get_current_object()
 
-    msg = Message(subject, recipients=[app.config['ORDER_MAIL_RECEIVER']])
+    msg = Message(subject, recipients=[to])
 
 
     # msg.body = "New Order From" + template

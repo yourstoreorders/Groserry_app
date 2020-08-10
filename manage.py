@@ -2,7 +2,8 @@
 import os
 
 from app import create_app, db
-from app.models import Product, Unit, ProductType, Admin, Stock , StatusCatalog
+from app.models import Product, Unit,\
+  ProductType, Admin, Stock , StatusCatalog, DeliveryCharge , ShopDetails
 
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
@@ -25,10 +26,17 @@ def deploy():
 
   # migrate database to latest revision
   upgrade()
+  # create all tables
   db.create_all()
 
+  # insert default values
+  ShopDetails.insert_shop_details()
+  Admin.insert_default_admin()
   StatusCatalog.insert_order_status()
   Unit.insert_units()
+  DeliveryCharge.insert_default_charge()
+  ProductType.insert_categories()
+
 
 
 

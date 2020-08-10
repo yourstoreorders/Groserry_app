@@ -21,7 +21,6 @@
             <th scope="col">Order<br>Id</th>
             <th scope="col">Date <br> Time</th>
             <th scope="col">Delivery <br>Address</th>
-            <th scope="col">Address<br>Pin</th>
 
             <th scope="col">Customer <br>Name</th>
             <th scope="col">Customer <br>Phone</th>
@@ -40,12 +39,11 @@
               <td scope="row" name="id">{{order.id}}</td>
               <td>{{order.time_placed}}</td>
 
-              <td>{{order.delivery_address}}</td>
-              <td>{{order.customer_address_pin}}</td>
+              <td>{{order.delivery_address}}<br>{{order.delivery_address_pin}}</td>
               
               <td>{{order.customer_name}}</td>
               <td>{{order.customer_contact_phone}}</td>
-              <td>{{order.customer_address}}</td>
+              <td>{{order.customer_address}}<br>{{order.customer_address_pin}}</td>
 
               <td><button type="button" class="btn btn-primary view_button" data-toggle="modal" data-target="#order_items_model" >Items</button></td>
               
@@ -88,6 +86,14 @@
               
             </tbody>
             <tfoot>
+              <tr>
+                <th  colspan="3">SubTotal:</th>
+                <td id="sub_total"></td>
+              </tr>
+              <tr>
+                <th  colspan="3">Delivery Charges:</th>
+                <td id="delivery_charge"></td>
+              </tr>
               <tr>
                 <th  colspan="3">Total :</th>
                 <td id="total"></td>

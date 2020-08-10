@@ -9,7 +9,7 @@
   <!-- Sidebar  -->
   <nav id="sidebar">
       <div class="sidebar-header">
-          <h3>My Shop Dashboard</h3>
+          <h3>{{shop_name}}</h3>
       </div>
 
       <ul class="list-unstyled components">
@@ -31,7 +31,12 @@
           <li>
             <a href="{{url_for('main.old_orders')}}">Old Orders</a>
           </li>
-
+          <li>
+            <a href="{{url_for('main.delivery_charges')}}">Delivery Charges</a>
+          </li>
+          <li>
+            <a href="{{url_for('main.settings')}}">Settings</a>
+          </li>
           <li>
             <a href="{{url_for('main.logout')}}">Log out</a>
           </li>

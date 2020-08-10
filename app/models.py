@@ -225,6 +225,30 @@ class ProductType(db.Model):
     return ProductType(type_name =name)
 
 
+  @staticmethod
+  def insert_categories():
+    categories = [
+      {'type_name':'Dairy'},
+      {'type_name':'Rice'},
+      {'type_name':'Fruits'},
+      {'type_name':'Dry Fruits'},
+      {'type_name':'Dal and Pulses'},
+      {'type_name':'Personal Care'},
+      {'type_name':'Spices'},
+      {'type_name':'Oils'}
+
+    ]
+
+    for cat in categories:
+        category = ProductType.query.filter_by(type_name=cat['type_name']).first()
+        if category is None:
+            category = ProductType(**cat)
+            db.session.add(category)
+    
+    db.session.commit()
+
+
+
 class Stock(db.Model):
   __tablename__ = "stock"
   product_id = db.Column(db.Integer, db.ForeignKey('products.id'), primary_key=True)
@@ -238,22 +262,6 @@ class Stock(db.Model):
   @property
   def get_stockUnits(self):
     return self.in_stock
-
-
-class ShopDetails(db.Model):
-  __tablename__ = "shop_details"
-  id = db.Column(db.Integer, primary_key=True)
-
-  shop_name =  db.Column(db.String(128), unique=True, nullable=False)
-
-  contact_phone = db.Column(db.String(10), unique=True, nullable=False)
-  details = db.Column(db.Text, nullable=True)
-  address = db.Column(db.Text,nullable=False)
-
-  admin_id = db.Column(db.Integer, db.ForeignKey('admin.id'), nullable=False)
-
-  def __repr__(self):
-    return f"ShopDetails:\nName:{self.shop_name}\ncontact:{self.contact_phone}\naddress:{self.address}"
 
 
 class OrderedItem(db.Model):
@@ -296,6 +304,8 @@ class PlacedOrder(db.Model):
   time_placed = db.Column(db.DateTime,unique=True, nullable = True,default=datetime.utcnow)
   details = db.Column(db.Text,nullable=True)
   delivery_address = db.Column(db.Text,nullable=False)
+  delivery_address_pin = db.Column(db.String(6),nullable=True)
+  delivery_charge = db.Column(db.Numeric(10,3),nullable=False)
 
   customer_name = db.Column(db.String(128), nullable=False)
 
@@ -303,10 +313,11 @@ class PlacedOrder(db.Model):
   customer_address = db.Column(db.Text, nullable=False)
   customer_address_pin = db.Column(db.String(6),nullable=False)
 
+
+  
   # customer_id = db.Column(db.Integer,db.ForeignKey('customer.id'),nullable=False)
   order_status_id =  db.Column(db.Integer,db.ForeignKey('order_status.id'),nullable=False)
   
-
   ref_items = db.relationship('OrderedItem',cascade="all,delete", backref='items', lazy=True)
 
   def __repr__(self):
@@ -316,6 +327,15 @@ class PlacedOrder(db.Model):
   def from_json(post_json,order_status_id):
     details = post_json.get('details')
     delivery_address = post_json.get('delivery_address')
+    delivery_address_pin = post_json.get('delivery_address_pin')
+
+    if(delivery_address_pin.strip() != ''):
+      charge = DeliveryCharge.get_delivery_charge(int(delivery_address_pin.strip(),base=10))
+
+    if charge is None:
+      charge = DeliveryCharge.get_default_charge()
+
+    delivery_charge =  charge.amount
 
     customer_name = post_json.get('customer_details').get('customer_name')
     customer_contact_phone = post_json.get('customer_details').get('contact_phone')
@@ -323,6 +343,7 @@ class PlacedOrder(db.Model):
     customer_address_pin = post_json.get('customer_details').get('address_pin') 
 
     return PlacedOrder(details = details, delivery_address = delivery_address,\
+      delivery_address_pin = delivery_address_pin, delivery_charge = delivery_charge,\
       customer_name= customer_name, customer_contact_phone= customer_contact_phone ,\
       customer_address = customer_address,customer_address_pin = customer_address_pin,\
       order_status_id = order_status_id)
@@ -333,7 +354,8 @@ class PlacedOrder(db.Model):
            'time_placed': self.time_placed,
            'details': self.details,
            'delivery_address': self.delivery_address,
-           'delivery_address_pin':self.customer_address_pin,
+           'delivery_address_pin':self.delivery_address_pin,
+           'delivery_charge':str(self.delivery_charge),
            'ordered_items': [element.to_json() for element in self.ref_items],
            'customer_details': {
               'customer_name': self.customer_name,
@@ -343,6 +365,69 @@ class PlacedOrder(db.Model):
            }
        }
        return json_unit
+
+class DeliveryCharge(db.Model):
+  __tablename__ = "delivery_charge"
+  id = db.Column(db.Integer, primary_key=True)
+  address_pin =  db.Column(db.String(6), unique=True, nullable=False)
+  amount = db.Column(db.Numeric(4,2),nullable=False)
+
+
+  def __repr__(self):
+    return f"Delivery_charge({self.address_pin})"
+
+  @staticmethod
+  def get_delivery_charge(pin):
+    return DeliveryCharge.query.filter_by(address_pin=str(pin)).first()
+  
+  @staticmethod
+  def get_default_charge():
+    return DeliveryCharge.query.filter_by(address_pin="others").first()
+  
+
+
+  
+  def to_json(self):
+        json_deliveryCharge = {
+            'url': url_for('api.get_delivery_charge', id=self.id),
+            'address_pin': self.address_pin,
+            'amount': str(self.amount)
+        }
+        return json_deliveryCharge
+  
+  # @staticmethod
+  # def from_json(json_post):
+  #   name = json_post.get('type_name')
+  #   if (name is None or name == ''):
+  #       raise ValidationError('doesnot have a name')
+  #   return ProductType(type_name =name)
+  
+  @staticmethod
+  def from_dict(dict_post):
+    address_pin = dict_post['address_pin']
+    amount  = dict_post['amount']
+
+    if (address_pin is None or address_pin == ''):
+        raise ValidationError('doesnot have a pin')
+    
+    if (amount is None or amount == ''):
+        raise ValidationError('doesnot have a amount')
+
+    return DeliveryCharge(address_pin = address_pin,amount=amount)
+
+  @staticmethod
+  def insert_default_charge():
+    charges = [
+      {'address_pin':'others','amount':200}
+    ]
+
+    for c in charges:
+        dc = DeliveryCharge.query.filter_by(address_pin=c['address_pin']).first()
+        if dc is None:
+            dc = DeliveryCharge(**c)
+            db.session.add(dc)
+    
+    db.session.commit()
 
 
 class OrderStatus(db.Model):
@@ -486,13 +571,8 @@ class Admin(db.Model,UserMixin):
   __tablename__ = "admin"
   id = db.Column(db.Integer, primary_key=True)
 
-  first_name =  db.Column(db.String(64), nullable=False)
-  last_name =  db.Column(db.String(64), nullable=True)
-
   username = db.Column(db.String(128), unique=True, nullable=False)
   password_hash = db.Column(db.String(128),unique = True,nullable=False)
-
-  ref_store = db.relationship('ShopDetails',backref='stores')
 
   @property
   def password(self):
@@ -540,11 +620,62 @@ class Admin(db.Model,UserMixin):
 
   def __repr__(self):
     return f"Admin:\nName:{self.first_name} {self.last_name}\nUserName:{self.username}"
+  
+
+  @staticmethod
+  def insert_default_admin():
+    users= [
+      {'username':'devadmin','password':'hardtoguesspass'},
+      {'username':'appadmin','password':'apppass'}
+    ]
+
+    for u in users:
+        user = Admin.query.filter_by(username=u['username']).first()
+        if user is None:
+            user = Admin(**u)
+            db.session.add(user)
+    
+    db.session.commit()
 
   
 
+class ShopDetails(db.Model):
+  __tablename__ = "shop_details"
+  id = db.Column(db.Integer, primary_key=True)
+
+  shop_name =  db.Column(db.String(128), unique=True, nullable=False)
+  shop_email = db.Column(db.String(64), unique=True, nullable=False)
+  contact_phone = db.Column(db.String(10), unique=True, nullable=False)
+  details = db.Column(db.Text, nullable=True)
+  address = db.Column(db.Text,nullable=False)
 
 
+  def __repr__(self):
+    return f"ShopDetails:\nName:{self.shop_name}\ncontact:{self.contact_phone}\naddress:{self.address}"
 
+  @staticmethod
+  def insert_shop_details():
+    details= [
+      {'shop_name':'My Shop','shop_email':'DefaultMial@gmail.com','contact_phone':'8888888888','details':'best grocery shop','address':'near garmur'}
+    ]
 
+    for d in details:
+        detail = ShopDetails.query.filter_by(shop_name=d['shop_name']).first()
+        if detail is None:
+            detail = ShopDetails(**d)
+            db.session.add(detail)
+    
+    db.session.commit()
+
+  def to_json(self):
+        json_shopDetails = {
+            'url': url_for('api.get_shopdetails', id=self.id),
+            'shop_name': self.shop_name,
+            'shop_email':self.shop_email,
+            'contact_phone': self.contact_phone,
+            'details':self.details,
+            'address':self.address
+        }
+        return json_shopDetails
+  
 
