@@ -295,7 +295,7 @@ def orders():
               stock.in_stock = 0 if (stock.in_stock - item.quantity <= 0) else stock.in_stock - item.quantity
               db.session.add(stock)
         else:
-          flash('Someting went wrong!')
+          flash('Someting went wrong! Products Not in stock')
           return redirect(url_for('main.orders'))
 
     

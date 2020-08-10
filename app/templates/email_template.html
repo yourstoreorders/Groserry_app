@@ -1,5 +1,8 @@
+{% block scripts %}
+  {{moment.include_moment()}}
+  {{ moment.lang("en") }}
+{% endblock %}
 <div>
-
   <div>
     <p>
       <b> <u>New Order Received</u></b> <br>
@@ -15,7 +18,7 @@
       <b><u>Order Details:</u></b><br>
 
       <b>Order Id:</b> {{data['order_details']['order_id']}} <br>
-      <b>Time Placed:</b> {{data['order_details']['time_placed']}} <br>
+      <b>Time Placed:</b> {{data['order_details']['time_placed']}}<br>
       <b>Details:</b> {{data['order_details']['details']}} <br>
       <b>Contact :</b> {{data['order_details']['customer_details']['customer_contact_phone']}} <br>
       <b>Delivery Address:</b> {{data['order_details']['delivery_address']}} <br>

@@ -19,7 +19,7 @@
         <thead>
           <tr>
             <th scope="col">Order<br>Id</th>
-            <th scope="col">Date <br> Time</th>
+            <th scope="col">Date and Time</th>
             <th scope="col">Delivery <br>Address</th>
 
             <th scope="col">Customer <br>Name</th>
@@ -37,7 +37,7 @@
           {% for order in orders %}
             <tr>
               <td scope="row" name="id">{{order.id}}</td>
-              <td>{{order.time_placed}}</td>
+              <td >{{moment(order.time_placed).format('Do/MMMM/YYYY, h:mm:ss a')|string}}</td>
 
               <td>{{order.delivery_address}}<br>{{order.delivery_address_pin}}</td>
               

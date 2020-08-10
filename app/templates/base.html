@@ -213,6 +213,12 @@
 
       });
   </script>
+
+{% block scripts %}
+  {{moment.include_moment()}}
+  {{ moment.lang("en") }}
+{% endblock %}
+
 </body>
 
 </html>

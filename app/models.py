@@ -7,7 +7,13 @@ import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 
+import pytz
+from pytz import timezone
 
+def convert_time(utc_time):
+  # tz = timezone('Asia/Kolkata')
+  tm = utc_time.astimezone(timezone('Asia/Kolkata'))
+  return tm
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -351,7 +357,7 @@ class PlacedOrder(db.Model):
   def to_json(self):
        json_unit = {
            'order_id': self.id,
-           'time_placed': self.time_placed,
+           'time_placed': convert_time(self.time_placed),
            'details': self.details,
            'delivery_address': self.delivery_address,
            'delivery_address_pin':self.delivery_address_pin,
