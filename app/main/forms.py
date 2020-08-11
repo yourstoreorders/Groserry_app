@@ -19,7 +19,7 @@ class AddProduct(FlaskForm):
   
   unit_id = SelectField('Unit',choices=[(1,'Kilogram'),(2,'Liter')],coerce= int)
   product_type_id = SelectField('Category',choices=[(1,'fruits'),(2,'vegetables')],coerce= int)
-  stock = IntegerField('Quantity',validators=[DataRequired()])
+  stock = IntegerField('Stock',validators=[DataRequired()])
   
   submit = SubmitField('Add Product')
 
@@ -32,7 +32,7 @@ class UpdateProduct(FlaskForm):
   
   unit_id = SelectField('Unit',choices=[(1,'Kilogram'),(2,'Liter')],coerce= int)
   product_type_id = SelectField('Category',choices=[(1,'fruits'),(2,'vegetables')],coerce= int)
-  stock = IntegerField('Quantity',validators=[DataRequired()])
+  stock = IntegerField('Stock',validators=[DataRequired()])
   
   submit = SubmitField('Update Product')
 

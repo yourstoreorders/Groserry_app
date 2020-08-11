@@ -98,9 +98,16 @@ def products():
         add_form_data[items.id] = items.data
       
       add_form_data["product_image"] = picture_file
-      element = Product.from_dict(add_form_data)
-      db.session.add(element)
-      db.session.commit()
+      try:
+        element = Product.from_dict(add_form_data)
+        db.session.add(element)
+        db.session.commit()
+      except exc.SQLAlchemyError as e:
+        
+        flash("Something went wrong,Duplicate Entry!","danger")
+        return redirect(url_for('main.products'))
+
+      
 
       stock = Stock(product_id = element.id,in_stock= add_form_data["stock"])
       db.session.add(stock)
@@ -108,7 +115,7 @@ def products():
       flash('Product Added')
 
       return redirect(url_for('main.products'))
-    flash('Something went wrong!')
+    # flash('Something went wrong!')
 
 
   if update_form.validate_on_submit():
@@ -139,9 +146,13 @@ def products():
     element.unit_id = update_form_data.get('unit_id', element.unit_id)
     element.product_type_id = update_form_data.get('product_type_id', element.product_type_id)
 
-   
-    db.session.add(element)
-    db.session.commit()
+    try:
+        db.session.add(element)
+        db.session.commit()
+    except exc.SQLAlchemyError as e:
+       
+        flash("Something went wrong,Duplicate Entry!","danger")
+        return redirect(url_for('main.products'))
     
     stock = Stock.query.get_or_404(element.id)
 
@@ -199,10 +210,16 @@ def categories():
     
     for items in add_form:
       add_form_data[items.id] = items.data
+
+    try:
+      element = ProductType.from_dict(add_form_data)
+      db.session.add(element)
+      db.session.commit()
+    except exc.SQLAlchemyError as e:
+      flash("Something went wrong,Duplicate Entry!","danger")
+      return redirect(url_for('main.categories'))
       
-    element = ProductType.from_dict(add_form_data)
-    db.session.add(element)
-    db.session.commit()
+    
 
     flash('Category Added')
 
@@ -220,8 +237,12 @@ def categories():
     
     element.type_name = update_form_data.get('type_name', element.type_name)
     
-    db.session.add(element)
-    db.session.commit()
+    try:
+      db.session.add(element)
+      db.session.commit()
+    except exc.SQLAlchemyError as e:
+      flash("Something went wrong,Duplicate Entry!","danger")
+      return redirect(url_for('main.categories'))
   
 
     flash('Category Updated')
