@@ -11,9 +11,9 @@ def get_delivery_charges():
   return jsonify({ 'charges': [element.to_json() for element in lists] })
 
 
-@api.route('/deliverycharge/<int:pin>')
-def get_delivery_charge(pin):
-  element = DeliveryCharge.query.filter_by(address_pin=str(pin)).first()
+@api.route('/deliverycharge/<int:id>')
+def get_delivery_charge(id):
+  element = DeliveryCharge.query.filter_by(address_pin=id).first()
   return jsonify({ 'charge': "None" if element is None else element.to_json() })
 
 @api.route('/deliverychargefrompin/<int:pin>')
