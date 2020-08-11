@@ -71,8 +71,11 @@ def save_picture(form_picture):
   return picture_filename
 
 def delete_picture(picture_filename):
-  os.remove(os.path.join("app/" +url_for('static',filename="product_images"),picture_filename))
-
+  try:
+    os.remove(os.path.join("app" +url_for('static',filename="product_images"),picture_filename))
+  except:
+    flash("could not remove image file!")
+    
 @main.route('/products', methods=['GET', 'POST'])
 @login_required
 def products():
