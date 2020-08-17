@@ -6,6 +6,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+from app.exceptions import ValidationError
 
 import pytz
 from pytz import timezone
@@ -330,10 +331,18 @@ class PlacedOrder(db.Model):
     return f"PlacedOrder: id:{self.id}\ntime_place:{self.time_placed}\ndelivert_address:{self.delivery_address}"
   
   @staticmethod
-  def from_json(post_json,order_status_id):
+  def from_json(post_json,order_status):
     details = post_json.get('details')
+    # if (details is None or details == ''):
+    #     raise ValidationError('doesnot have a customer name')
+
     delivery_address = post_json.get('delivery_address')
+    if (delivery_address is None or delivery_address == ''):
+        raise ValidationError('doesnot have a delivery address')
+
     delivery_address_pin = post_json.get('delivery_address_pin')
+    if (delivery_address_pin is None or delivery_address_pin == ''):
+        raise ValidationError('doesnot have a delivery address pin')
 
     if(delivery_address_pin.strip() != ''):
       charge = DeliveryCharge.get_delivery_charge(int(delivery_address_pin.strip(),base=10))
@@ -344,15 +353,26 @@ class PlacedOrder(db.Model):
     delivery_charge =  charge.amount
 
     customer_name = post_json.get('customer_details').get('customer_name')
+    if (customer_name is None or customer_name == ''):
+        raise ValidationError('doesnot have a customer name')
+
     customer_contact_phone = post_json.get('customer_details').get('contact_phone')
+    if (customer_contact_phone is None or customer_contact_phone == ''):
+        raise ValidationError('doesnot have a customer phone')
+
     customer_address = post_json.get('customer_details').get('contact_address')
+    if (customer_address is None or customer_address == ''):
+        raise ValidationError('doesnot have a customer address')
+
     customer_address_pin = post_json.get('customer_details').get('address_pin') 
+    if (customer_address_pin is None or customer_address_pin == ''):
+        raise ValidationError('doesnot have a customer address pin')
 
     return PlacedOrder(details = details, delivery_address = delivery_address,\
       delivery_address_pin = delivery_address_pin, delivery_charge = delivery_charge,\
       customer_name= customer_name, customer_contact_phone= customer_contact_phone ,\
       customer_address = customer_address,customer_address_pin = customer_address_pin,\
-      order_status_id = order_status_id)
+      order = order_status)
   
   def to_json(self):
        json_unit = {
@@ -442,7 +462,10 @@ class OrderStatus(db.Model):
 
   status_time = db.Column(db.DateTime,unique=True, nullable=False,default=datetime.utcnow)
   details = db.Column(db.Text,nullable=True)
+
   status_catalog_id =  db.Column(db.Integer,db.ForeignKey('status_catalog.id'), nullable=False)
+
+  ref_order = db.relationship('PlacedOrder',cascade="all,delete", backref='order', lazy=True)
 
   def __repr__(self):
     return f"OrderStatus:\nid:{self.id}\ndetails:{self.details}"

@@ -3,7 +3,7 @@ from . import api
 from . authentication import auth
 from .. import db
 from ..models import ProductType
-
+from app.exceptions import ValidationError
 
 @api.route('/producttype/',methods=['GET'])
 def get_categories():

@@ -3,7 +3,7 @@ from . import api
 from . authentication import auth
 from .. import db
 from ..models import DeliveryCharge
-
+from app.exceptions import ValidationError
 
 @api.route('/deliverycharge/',methods=['GET'])
 def get_delivery_charges():

@@ -4,7 +4,7 @@ from . import api
 from . authentication import auth
 from .. import db
 from ..models import Product
-
+from app.exceptions import ValidationError
 
 @api.route('/product/',methods=['GET'])
 def get_products():

@@ -3,7 +3,7 @@ from . import api
 from . authentication import auth
 from .. import db
 from ..models import Unit
-
+from app.exceptions import ValidationError
 
 @api.route('/unit/',methods=['GET'])
 def get_units():

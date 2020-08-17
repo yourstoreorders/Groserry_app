@@ -3,6 +3,7 @@ from flask_httpauth import HTTPBasicAuth
 from ..models import Admin
 from . import api
 from .errors import unauthorized, forbidden
+from app.exceptions import ValidationError
 
 auth = HTTPBasicAuth()
 

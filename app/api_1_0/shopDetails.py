@@ -2,7 +2,7 @@ from flask import jsonify, request, url_for
 from . import api 
 from .. import db
 from ..models import ShopDetails
-
+from app.exceptions import ValidationError
 
 @api.route('/shopdetails/',methods=['GET'])
 def get_shopdetails():
