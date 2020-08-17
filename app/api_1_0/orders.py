@@ -5,6 +5,7 @@ from .. import db
 from ..models import OrderStatus, PlacedOrder , OrderedItem ,StatusCatalog, Product,ShopDetails
 from ..email import send_email
 from app.exceptions import ValidationError
+from sqlalchemy import exc
 
 @api.route('/order/', methods=['POST'])
 # @auth.login_required
@@ -20,17 +21,30 @@ def new_order():
       newPlacedOrder = PlacedOrder.from_json(request.json.get("order_details"),newOrderStatus)
     except ValidationError as e1:
       error["error"] = str(e1)
+      db.session.close()
       return jsonify(error)
     except exc.SQLAlchemyError as e2:
       error["error"] = str(e2)
       return jsonify(error)
+      db.session.close()
       
     
     db.session.add(newPlacedOrder)
-    db.session.commit()
+    
 
     for item in request.json.get("order_items"):
-      newOrderItem = OrderedItem.from_json(item,newPlacedOrder.id)
+      
+      try:
+        newOrderItem = OrderedItem.from_json(item,newPlacedOrder)
+      except ValidationError as e1:
+        error["error"] = str(e1)
+        db.session.close()
+        return jsonify(error)
+      except exc.SQLAlchemyError as e2:
+        error["error"] = str(e2)
+        return jsonify(error)
+        db.session.close()
+      
       db.session.add(newOrderItem)
 
     db.session.commit()
@@ -45,9 +59,6 @@ def new_order():
 
     return jsonify(data)
   
-
-def validate_order_request(json_data):
-  pass
 
 def order_items(order_id):
 

@@ -295,13 +295,27 @@ class OrderedItem(db.Model):
   
   
   @staticmethod
-  def from_json(post_json,placed_order_id):
+  def from_json(post_json,placed_order):
     quantity = post_json.get('quantity')
+    if (quantity is None or quantity == ''):
+        raise ValidationError('doesnot have a quantity')
+
     price = post_json.get('price')
+    # if (price is None or price == ''):
+    #     raise ValidationError('doesnot have a price')
 
     product_id = post_json.get('product_id')
+    if (product_id is None or product_id == ''):
+        raise ValidationError('doesnot have a product_id')
+    
+    product = Product.query.filter_by(id=product_id).first()
+    if (product is None):
+        raise ValidationError(str(product_id) + ' is not a valid product')
+    
+    if(float(quantity) > float(product.stock_details[0].in_stock)):
+        raise ValidationError("stock unavailable for product_id : " + str(product.id))
 
-    return OrderedItem(quantity = quantity, price = price , product_id = product_id, placed_order_id = placed_order_id)
+    return OrderedItem(quantity = quantity, price = price , ordered_items = product, items = placed_order)
 
 
 class PlacedOrder(db.Model):
