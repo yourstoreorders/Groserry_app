@@ -19,4 +19,9 @@ def get_delivery_charge(id):
 @api.route('/deliverychargefrompin/<int:pin>')
 def get_delivery_charge_for_address(pin):
   element = DeliveryCharge.query.filter_by(address_pin=str(pin)).first()
+
+  if element is None:
+    element = DeliveryCharge.query.filter_by(address_pin="others").first()
+  
+
   return jsonify({ 'charge': "None" if element is None else element.to_json() })
