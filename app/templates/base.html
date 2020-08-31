@@ -22,15 +22,29 @@
   {% block  body%}
 
   {% endblock %}
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
-  </script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
-  </script>
+  <!-- <div id="footer" class="container">
+    <div class="card">
+      <div class="card-body">
+        <div class="container">
+          <div class="row">
+              <div class="col-lg-12" style="text-align: center;">
+                  <p class="copyright text-muted small">All Rights Reserved | Design by Anvaya Empowering Tech</p>
+              </div>
+          </div>
+      </div>
+      </div>
+    </div>
+
+  </div> -->
+<!-- 
+  <footer>
+    <p>Author: Hege Refsnes</p>
+    <p><a href="mailto:hege@example.com">hege@example.com</a></p>
+  </footer> -->
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
 
   <!-- jQuery Custom Scroller CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/malihu-custom-scrollbar-plugin/3.1.5/jquery.mCustomScrollbar.concat.min.js"></script>
@@ -59,15 +73,17 @@
             var product_id = row.find('td:eq(0)').text()
             var product_name = row.find('td:eq(2)').text()
             var stock = row.find('td:eq(3)').text()
-            var unit = row.find('td:eq(4)').attr("name");
-            var price = row.find('td:eq(5)').text()
-            var category = row.find('td:eq(6)').attr("name");
-            var description = row.find('td:eq(7)').text()
+            var weight = row.find('td:eq(4)').text()
+            var unit = row.find('td:eq(5)').attr("name");
+            var price = row.find('td:eq(6)').text()
+            var category = row.find('td:eq(7)').attr("name");
+            var description = row.find('td:eq(8)').text()
             
             $("#update_model").find('#product_id')[0].value = product_id
             $("#update_model").find('#product_name')[0].value = product_name
             $("#update_model").find('#product_description')[0].value = description
             $("#update_model").find('#stock')[0].value = stock
+            $("#update_model").find('#product_weight')[0].value = weight
             $("#update_model").find('#price_per_unit')[0].value = price
             $("#update_model").find('#unit_id')[0].value = unit
             $("#update_model").find('#product_type_id')[0].value = category
@@ -215,9 +231,9 @@
   </script>
 
 {% block scripts %}
-  {{moment.include_moment()}}
-  {{ moment.lang("en") }}
+  {{ moment.include_moment() }}
 {% endblock %}
+
 
 </body>
 

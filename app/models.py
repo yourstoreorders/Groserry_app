@@ -27,6 +27,7 @@ class Product(db.Model):
   __tablename__ = "products"
   id = db.Column(db.Integer, primary_key=True)
   product_name =  db.Column(db.String(128), unique=True, nullable=False)
+  product_weight = db.Column(db.Integer,default=0, nullable=False)
   product_description = db.Column(db.String(255), nullable=False)
   price_per_unit = db.Column(db.Numeric(10,2),nullable=False)
   product_image = db.Column(db.String(256),nullable=False)
@@ -54,6 +55,7 @@ class Product(db.Model):
            'product_image': os.path.join(url_for('static',filename='product_images',_external=True)\
               , self.product_image),
            'product_description': self.product_description,
+           'product_weight':str(self.product_weight),
            'price_per_unit': str(self.price_per_unit),
            'unit': Unit.get_unit(self.unit_id).unit_name,
            'product_type': ProductType.get_productType(self.product_type_id).type_name,
@@ -66,6 +68,7 @@ class Product(db.Model):
     name = dict_post['product_name']
     description = dict_post['product_description']
     price = dict_post['price_per_unit']
+    weight = dict_post['product_weight']
     unit_id = dict_post['unit_id']
     product_type_id = dict_post['product_type_id']
     product_image = dict_post['product_image']
@@ -75,6 +78,9 @@ class Product(db.Model):
 
     if (price is None or price == ''):
         raise ValidationError('doesnot have a price')
+    
+    if (weight is None or weight == ''):
+        raise ValidationError('doesnot have a weight')
     
     if (unit_id is None or unit_id == ''):
         raise ValidationError('doesnot have a unit id')
@@ -94,6 +100,7 @@ class Product(db.Model):
     return Product(product_name=name,
                   product_description =  description,
                   price_per_unit = float(price),
+                  product_weight=  int(weight),
                   unit_items = unit,
                   product_items = product_type,
                   product_image = product_image)
@@ -103,6 +110,7 @@ class Product(db.Model):
     name = json_post.get('product_name')
     description = json_post.get('product_description')
     price = json_post.get('price_per_unit')
+    weight = json_post.get('product_weight')
     unit_id = json_post.get('unit_id')
     product_type_id = json_post.get('product_type_id')
 
@@ -111,6 +119,9 @@ class Product(db.Model):
 
     if (price is None or price == ''):
         raise ValidationError('doesnot have a price')
+
+    if (weight is None or weight == ''):
+        raise ValidationError('doesnot have a weight')
     
     if (unit_id is None or unit_id == ''):
         raise ValidationError('doesnot have a unit id')
@@ -127,6 +138,7 @@ class Product(db.Model):
     return Product(product_name=name,
                   product_description =  description,
                   price_per_unit = float(price),
+                  product_weight = int(weight),
                   unit_items = unit,
                   product_items = product_type)
 
@@ -410,7 +422,7 @@ class DeliveryCharge(db.Model):
   __tablename__ = "delivery_charge"
   id = db.Column(db.Integer, primary_key=True)
   address_pin =  db.Column(db.String(6), unique=True, nullable=False)
-  amount = db.Column(db.Numeric(4,2),nullable=False)
+  amount = db.Column(db.Numeric(6,2),nullable=False)
 
 
   def __repr__(self):

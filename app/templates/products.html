@@ -23,6 +23,7 @@
             <th scope="col">image</th>
             <th scope="col">Name</th>
             <th scope="col">Stock</th>
+            <th scope="col">Weight</th>
             <th scope="col">Unit</th>
             <th scope="col">Price</th>
             <th scope="col">Category</th>
@@ -39,6 +40,7 @@
               <td > <img src="{{url_for('static',filename='product_images',_external=True)}}/{{product.product_image}}" class=" img-fluid rounded img-thumbnail" style="width: 100px;" alt="Cinque Terre"></td>
               <td>{{product.product_name}}</td>
               <td>{{product.stock_details[0].in_stock}}</td>
+              <td>{{product.product_weight}}</td>
               <td name='{{product.unit_id}}'>{{product.unit_items.unit_name}}</td>
               <td >{{product.price_per_unit}}</td>
               <td name='{{product.product_type_id}}'>{{product.product_items.type_name}}</td>
