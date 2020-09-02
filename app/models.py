@@ -7,6 +7,7 @@ import hashlib
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from app.exceptions import ValidationError
+from sqlalchemy import and_
 
 import pytz
 from pytz import timezone
@@ -338,17 +339,20 @@ class PlacedOrder(db.Model):
   details = db.Column(db.Text,nullable=True)
   delivery_address = db.Column(db.Text,nullable=False)
   delivery_address_pin = db.Column(db.String(6),nullable=True)
-  delivery_charge = db.Column(db.Numeric(10,3),nullable=False)
+  delivery_charge = db.Column(db.Numeric(10,2),nullable=False)
 
   customer_name = db.Column(db.String(128), nullable=False)
+
+  total_amount =  db.Column(db.Numeric(10,2),nullable=False)
 
   customer_contact_phone = db.Column(db.String(10), nullable=False)
   customer_address = db.Column(db.Text, nullable=False)
   customer_address_pin = db.Column(db.String(6),nullable=False)
 
 
-  
-  # customer_id = db.Column(db.Integer,db.ForeignKey('customer.id'),nullable=False)
+  payment_method = db.Column(db.Integer,db.ForeignKey('payment_method.id'),nullable=False)
+  payment_status = db.Column(db.Integer,db.ForeignKey('payment_status.id'),nullable=False)
+
   order_status_id =  db.Column(db.Integer,db.ForeignKey('order_status.id'),nullable=False)
   
   ref_items = db.relationship('OrderedItem',cascade="all,delete", backref='items', lazy=True)
@@ -361,6 +365,18 @@ class PlacedOrder(db.Model):
     details = post_json.get('details')
     # if (details is None or details == ''):
     #     raise ValidationError('doesnot have a customer name')
+
+    # payment_method = post_json.get('payment_method')
+    # if (payment_method is None or payment_method == ''):
+    #     raise ValidationError('doesnot have a payment_method')
+    
+    # payment_status = post_json.get('payment_status')
+    # if (payment_status is None or payment_status == ''):
+    #     raise ValidationError('doesnot have a payment_status')
+
+    total_amount = 0
+    # if (total_amount is None or total_amount == ''):
+    #     raise ValidationError('doesnot have a total_amount')
 
     delivery_address = post_json.get('delivery_address')
     if (delivery_address is None or delivery_address == ''):
@@ -394,7 +410,9 @@ class PlacedOrder(db.Model):
     if (customer_address_pin is None or customer_address_pin == ''):
         raise ValidationError('doesnot have a customer address pin')
 
-    return PlacedOrder(details = details, delivery_address = delivery_address,\
+    return PlacedOrder(\
+      total_amount = total_amount, payment_method = PaymentMethod.default_id().id, payment_status = PaymentStatus.get_pending().id,\
+      details = details, delivery_address = delivery_address,\
       delivery_address_pin = delivery_address_pin, delivery_charge = delivery_charge,\
       customer_name= customer_name, customer_contact_phone= customer_contact_phone ,\
       customer_address = customer_address,customer_address_pin = customer_address_pin,\
@@ -409,6 +427,8 @@ class PlacedOrder(db.Model):
            'delivery_address_pin':self.delivery_address_pin,
            'delivery_charge':str(self.delivery_charge),
            'ordered_items': [element.to_json() for element in self.ref_items],
+           'payment_method': self.payment_method,
+           'payment_status': self.payment_status,
            'customer_details': {
               'customer_name': self.customer_name,
               'customer_contact_phone':self.customer_contact_phone,
@@ -482,6 +502,77 @@ class DeliveryCharge(db.Model):
     db.session.commit()
 
 
+class WeightDeliveryCharge(db.Model):
+  __tablename__ = "weight_delivery_charge"
+  id = db.Column(db.Integer, primary_key=True)
+  start_weight = db.Column(db.Integer,nullable=False)
+  end_weight =  db.Column(db.Integer,nullable=False)
+
+  amount = db.Column(db.Numeric(6,2),nullable=False)
+
+
+  def __repr__(self):
+    return f"Delivery_charge"
+
+  @staticmethod
+  def get_delivery_charge(weight):
+    weight = int(weight)
+    return  WeightDeliveryCharge.query.filter(
+      and_(
+        WeightDeliveryCharge.start_weight <= weight,
+        weight <= WeightDeliveryCharge.end_weight 
+      )
+    ).first()
+  
+  @staticmethod
+  def get_default_charge():
+    return  WeightDeliveryCharge.query.filter_by(start_weight = 0).first()
+
+  
+  def to_json(self):
+        json_deliveryCharge = {
+            'url': url_for('api.get_weight_delivery_charge', id=self.id),
+            'start_weight':str(self.start_weight),
+            'end_weight':str(self.end_weight),
+            'amount': str(self.amount)
+        }
+        return json_deliveryCharge
+  
+  
+  @staticmethod
+  def from_dict(dict_post):
+    start_weight = dict_post['start_weight']
+    end_weight = dict_post['end_weight']
+    amount  = dict_post['amount']
+
+    if (start_weight is None or start_weight == ''):
+        raise ValidationError('doesnot have a start weight')
+
+    if (end_weight is None or end_weight == ''):
+        raise ValidationError('doesnot have a end weight')
+    
+    if (amount is None or amount == ''):
+        raise ValidationError('doesnot have a amount')
+
+    return WeightDeliveryCharge(start_weight = start_weight,\
+      end_weight= end_weight,\
+      amount = amount)
+
+  @staticmethod
+  def insert_default_charge():
+    charges = [
+      {'start_weight':0,'end_weight':1,'amount':0}
+    ]
+
+    for c in charges:
+        dc = WeightDeliveryCharge.query.filter_by(start_weight=c['start_weight']).first()
+        if dc is None:
+            dc = WeightDeliveryCharge(**c)
+            db.session.add(dc)
+    
+    db.session.commit()
+
+
 class OrderStatus(db.Model):
   __tablename__ = "order_status"
   id = db.Column(db.Integer, primary_key=True)
@@ -499,6 +590,99 @@ class OrderStatus(db.Model):
   @staticmethod
   def from_data(status_catalog_id,details=""):
     return OrderStatus(details = details,status_catalog_id = status_catalog_id )
+
+
+class PaymentMethod(db.Model):
+  __tablename__ = "payment_method"
+  id = db.Column(db.Integer, primary_key=True)
+  method_name = db.Column(db.String(128),nullable=False)
+
+  ref_orders = db.relationship('PlacedOrder', backref='payment_method_orders', lazy=True)
+
+  def __repr__(self):
+    return f"Payment_method ({self.method_name})"
+  
+  @staticmethod
+  def cod_id():
+    return PaymentMethod.query.filter_by(method_name="COD").first()
+  
+  @staticmethod
+  def online_id():
+     return PaymentMethod.query.filter_by(method_name="ONLINE").first()
+
+  @staticmethod
+  def default_id():
+     return PaymentMethod.query.filter_by(method_name="DEFAULT").first()
+  
+  @staticmethod
+  def get_status(id):
+    id = int(id)
+    return PaymentMethod.query.filter_by(id=id).first()
+  
+  def to_json(self):
+        json_paymentMethod = {
+            'id':self.id,
+            'method_name':self.method_name,
+        }
+        return json_paymentMethod
+
+
+  @staticmethod
+  def insert_payment_method():
+    methods = [
+      {'method_name':'DEFAULT'},
+      {'method_name':'COD'},
+      {'method_name':'ONLINE'}
+    ]
+
+    for m in methods:
+        method = PaymentMethod.query.filter_by(method_name=m['method_name']).first()
+        if method is None:
+            method = PaymentMethod(**m)
+            db.session.add(method)
+    
+    db.session.commit()
+
+class PaymentStatus(db.Model):
+  __tablename__ = "payment_status"
+  id = db.Column(db.Integer, primary_key=True)
+  status_name = db.Column(db.String(128),nullable=False)
+
+  ref_orders = db.relationship('PlacedOrder', backref='payment_status_orders', lazy=True)
+
+  def __repr__(self):
+    return f"PaymentStatus ({self.status_name})"
+  
+  @staticmethod
+  def get_done():
+    return PaymentStatus.query.filter_by(status_name = "DONE").first()
+  
+  @staticmethod
+  def get_pending():
+    return PaymentStatus.query.filter_by(status_name = "PENDING").first()
+  
+  def to_json(self):
+        json_paymentStatus = {
+            'id':self.id,
+            'status_name':self.status_name,
+        }
+        return json_paymentStatus
+
+
+  @staticmethod
+  def insert_payment_status():
+    status = [
+      {'status_name':'DONE'},
+      {'status_name':'PENDING'}
+    ]
+
+    for s in status:
+        status = PaymentStatus.query.filter_by(status_name=s['status_name']).first()
+        if status is None:
+            status = PaymentStatus(**s)
+            db.session.add(status)
+    
+    db.session.commit()
 
 
 class StatusCatalog(db.Model):

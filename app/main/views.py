@@ -7,12 +7,14 @@ from flask import render_template, jsonify
 from . import main
 from .. import db
 from .. models import Admin,Product,Unit,ProductType,\
-  Stock ,PlacedOrder, OrderStatus, StatusCatalog, OrderedItem, DeliveryCharge,\
-  ShopDetails
+  Stock ,PlacedOrder, OrderStatus, StatusCatalog, OrderedItem,\
+  WeightDeliveryCharge, DeliveryCharge,\
+  ShopDetails, PaymentMethod,PaymentStatus
 from . forms import LoginForm, AddProduct, UpdateProduct, DeleteProduct,\
   AddCategory,UpdateCategory, DeleteCategory, \
   DeleteOrder, UpdateOrder,\
-  AddCharge, UpdateCharge,DeleteCharge,\
+  AddressAddCharge, AddressUpdateCharge,AddressDeleteCharge,\
+  WeightAddCharge, WeightUpdateCharge,WeightDeleteCharge,\
   ChangeUsernameForm, ChangePasswordForm, ChangeShopDetailForm
   
 
@@ -148,6 +150,7 @@ def products():
     element.price_per_unit = update_form_data.get('price_per_unit', element.price_per_unit)
     element.unit_id = update_form_data.get('unit_id', element.unit_id)
     element.product_type_id = update_form_data.get('product_type_id', element.product_type_id)
+    element.product_weight = update_form_data.get('product_weight', element.product_weight)
 
     try:
         db.session.add(element)
@@ -283,11 +286,20 @@ def categories():
 @login_required
 def orders():
 
-  orders = PlacedOrder.query.join(OrderStatus, PlacedOrder.order_status_id == OrderStatus.id).\
-    filter(OrderStatus.status_catalog_id == StatusCatalog.new_id().id).all()[::-1]
+  # orders = PlacedOrder.query.join(OrderStatus, PlacedOrder.order_status_id == OrderStatus.id).\
+  #   filter(OrderStatus.status_catalog_id == StatusCatalog.new_id().id).all()[::-1]
   
-  
-
+  orders = db.session.query(
+          PlacedOrder,PaymentMethod,PaymentStatus
+      ).join(
+        OrderStatus, PlacedOrder.order_status_id == OrderStatus.id
+      ).filter(
+        OrderStatus.status_catalog_id == StatusCatalog.new_id().id
+      ).filter(
+        PlacedOrder.payment_method == PaymentMethod.id
+      ).filter(
+        PlacedOrder.payment_status == PaymentStatus.id
+      ).all()[::-1]
   update_form = UpdateOrder()
 
   update_form.order_status.choices = [(status.id, status.status_name) for status in StatusCatalog.query.all()]
@@ -405,8 +417,20 @@ def order_items(order_id):
 @main.route('/old_orders', methods=['GET', 'POST'])
 @login_required
 def old_orders():
-  orders = PlacedOrder.query.join(OrderStatus, PlacedOrder.order_status_id == OrderStatus.id).\
-    filter(OrderStatus.status_catalog_id == StatusCatalog.old_id().id).all()
+  # orders = PlacedOrder.query.join(OrderStatus, PlacedOrder.order_status_id == OrderStatus.id).\
+  #   filter(OrderStatus.status_catalog_id == StatusCatalog.old_id().id).all()
+
+  orders = db.session.query(
+          PlacedOrder,PaymentMethod,PaymentStatus
+      ).join(
+        OrderStatus, PlacedOrder.order_status_id == OrderStatus.id
+      ).filter(
+        OrderStatus.status_catalog_id == StatusCatalog.old_id().id
+      ).filter(
+        PlacedOrder.payment_method == PaymentMethod.id
+      ).filter(
+        PlacedOrder.payment_status == PaymentStatus.id
+      ).all()[::-1]
 
 
   delete_form = DeleteOrder()
@@ -439,36 +463,61 @@ def old_orders():
 @main.route('/delivery_charges', methods=['GET', 'POST'])
 @login_required
 def delivery_charges():
-  add_form = AddCharge()
+  
+  # address forms
+  address_add_form = AddressAddCharge()
+  address_update_form = AddressUpdateCharge()
+  address_delete_form = AddressDeleteCharge()
 
-  update_form = UpdateCharge()
 
-  delete_form = DeleteCharge()
+  # weight forms
+  weight_add_form = WeightAddCharge(request.form)
+  weight_update_form = WeightUpdateCharge(request.form)
+  weight_delete_form = WeightDeleteCharge()
 
-  charges = DeliveryCharge.query.all()
 
-  if add_form.submit1.data and  add_form.validate_on_submit():
+  address_charges = DeliveryCharge.query.all()
+
+  weight_charges = WeightDeliveryCharge.query.all()
+
+  if address_add_form.submit1.data and  address_add_form.validate_on_submit():
 
     # print("add form")
-    add_form_data = dict()
+    address_add_form_data = dict()
     
-    for items in add_form:
-      add_form_data[items.id] = items.data
+    for items in address_add_form:
+      address_add_form_data[items.id] = items.data
       
-    element = DeliveryCharge.from_dict(add_form_data)
+    element = DeliveryCharge.from_dict(address_add_form_data)
     db.session.add(element)
     db.session.commit()
 
-    flash('Delivery Charge Added')
+    flash('Delivery Charge For Address Added')
 
     return redirect(url_for('main.delivery_charges'))
 
-  if update_form.submit2.data and update_form.validate_on_submit():
+  # weight charge add form
+  if request.method == "POST" and weight_add_form.submit4.data and  weight_add_form.validate_on_submit():
+    print("sds")
+    weight_add_form_data = dict()
+    
+    for items in weight_add_form:
+      weight_add_form_data[items.id] = items.data
+      
+    element = WeightDeliveryCharge.from_dict(weight_add_form_data)
+    db.session.add(element)
+    db.session.commit()
+
+    flash('Delivery Charge For Weight Added')
+
+    return redirect(url_for('main.delivery_charges'))
+
+  if address_update_form.submit2.data and address_update_form.validate_on_submit():
 
     # print("update form")
     update_form_data = dict()
 
-    for items in update_form:
+    for items in address_update_form:
       update_form_data[items.id] = items.data
 
     element = DeliveryCharge.query.get_or_404(update_form_data["charge_id"])
@@ -483,13 +532,37 @@ def delivery_charges():
     flash('Delivery Charge Updated')
 
     return redirect(url_for('main.delivery_charges'))
+  
+  if request.method == "POST" and weight_update_form.submit5.data and weight_update_form.validate_on_submit():
 
+    # print("update form")
+    update_form_data = dict()
 
-  if delete_form.submit3.data and delete_form.validate_on_submit():
+    for items in weight_update_form:
+      update_form_data[items.id] = items.data
+
+    element = WeightDeliveryCharge.query.get_or_404(update_form_data["charge_id"])
+    
+    element.start_weight = update_form_data.get('start_weight', element.start_weight)
+    element.end_weight = update_form_data.get('end_weight', element.end_weight)
+    
+    element.amount = update_form_data.get('amount', element.amount)
+    
+    db.session.add(element)
+    db.session.commit()
+  
+
+    flash('Delivery Charge Updated')
+
+    return redirect(url_for('main.delivery_charges'))
+
+# address delete form
+
+  if address_delete_form.submit3.data and address_delete_form.validate_on_submit():
 
     # print("delete called")
     delete_form_data = dict()
-    for items in delete_form:
+    for items in address_delete_form:
       delete_form_data[items.id] = items.data
 
     element = DeliveryCharge.query.get_or_404(delete_form_data["charge_id"])
@@ -501,11 +574,45 @@ def delivery_charges():
       db.session.rollback()
       flash("Could not delete, Something went wrong")
     else:
-      flash('Delivery Charge Deleted')
+      flash('Delivery Charge For Address Deleted')
 
     return redirect(url_for('main.delivery_charges'))
 
-  return render_template('delivery_charges.html',charges = charges,add_form = add_form, update_form = update_form, delete_form = delete_form )
+# Weight delete form
+  if request.method == "POST" and weight_delete_form.submit6.data and weight_delete_form.validate_on_submit():
+
+    # print("delete called")
+    delete_form_data = dict()
+    for items in weight_delete_form:
+      delete_form_data[items.id] = items.data
+
+    element = WeightDeliveryCharge.query.get_or_404(delete_form_data["charge_id"])
+    
+    try:
+      db.session.delete(element)
+      db.session.commit()
+    except exc.SQLAlchemyError as e:
+      db.session.rollback()
+      flash("Could not delete, Something went wrong")
+    else:
+      flash('Delivery Charge For Weight Deleted')
+
+    return redirect(url_for('main.delivery_charges'))
+
+
+
+  
+
+  return render_template('delivery_charges.html',\
+    address_charges = address_charges,\
+    address_add_form = address_add_form,\
+    address_update_form = address_update_form,\
+    address_delete_form = address_delete_form,\
+      
+    weight_charges = weight_charges,\
+    weight_add_form = weight_add_form,\
+    weight_update_form = weight_update_form,\
+    weight_delete_form = weight_delete_form)
 
 
 

@@ -20,8 +20,10 @@
           <tr>
             <th scope="col">Order<br>Id</th>
             <th scope="col">Date and Time </th>
-            <th scope="col">Delivery <br>Address</th>
+            <th scope="col">Payment Method</th>
+            <th scope="col">Payment Status</th>
 
+            <th scope="col">Delivery <br>Address</th>
             <th scope="col">Customer <br>Name</th>
             <th scope="col">Customer <br>Phone</th>
             <th scope="col">Customer <br>Address</th>
@@ -36,15 +38,15 @@
 
           {% for order in orders %}
             <tr>
-              <td scope="row" name="id">{{order.id}}</td>
-              <td >{{moment(order.time_placed).format('Do/MMMM/YYYY, h:mm:ss a')|string}}</td>
-
-              <td>{{order.delivery_address}}<br>{{order.delivery_address_pin}}</td>
-              
-              <td>{{order.customer_name}}</td>
-              <td>{{order.customer_contact_phone}}</td>
-              <td>{{order.customer_address}}<br>{{order.customer_address_pin}}</td>
-              <td>{{order.details}}</td>
+              <td scope="row" name="id">{{order[0].id}}</td>
+              <td >{{moment(order[0].time_placed).format('Do/MMMM/YYYY, h:mm:ss a')|string}}</td>
+              <td>{{order[1].method_name}}</td>
+              <td>{{order[2].status_name}}</td>
+              <td>{{order[0].delivery_address}}<br>{{order[0].delivery_address_pin}}</td>
+              <td>{{order[0].customer_name}}</td>
+              <td>{{order[0].customer_contact_phone}}</td>
+              <td>{{order[0].customer_address}}<br>{{order[0].customer_address_pin}}</td>
+              <td>{{order[0].details}}</td>
 
               <td><button type="button" class="btn btn-primary view_button" data-toggle="modal" data-target="#order_items_model" >Items</button></td>
               

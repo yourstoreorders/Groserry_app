@@ -194,24 +194,9 @@
           });
 
 
-          // For category page
+          // For delivery charges page
 
-          $('.charges_table tbody').on('click','.update_button',function(){
-
-            var row = $(this).closest("tr") // Finds the closest row <tr> 
-
-            var charge_id = row.find('td:eq(0)').text()
-            var address_pin = row.find('td:eq(1)').text()
-            var amount = row.find('td:eq(2)').text()
-
-
-            $("#update_model").find('#charge_id')[0].value = charge_id
-            $("#update_model").find('#address_pin')[0].value = address_pin
-            $("#update_model").find('#amount')[0].value = amount
-
-          });
-
-          $('.charges_table tbody').on('click','.delete_button',function(){
+          $('.address_charges_table tbody').on('click','.update_button',function(){
 
             var row = $(this).closest("tr") // Finds the closest row <tr> 
 
@@ -220,11 +205,61 @@
             var amount = row.find('td:eq(2)').text()
 
 
-            $("#delete_model").find('#charge_id')[0].value = charge_id
-            $("#delete_model").find('#address_pin')[0].value = address_pin
-            $("#delete_model").find('#amount')[0].value = amount
+            $("#address_update_model").find('#charge_id')[0].value = charge_id
+            $("#address_update_model").find('#address_pin')[0].value = address_pin
+            $("#address_update_model").find('#amount')[0].value = amount
 
           });
+
+          $('.address_charges_table tbody').on('click','.delete_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+            var charge_id = row.find('td:eq(0)').text()
+            var address_pin = row.find('td:eq(1)').text()
+            var amount = row.find('td:eq(2)').text()
+
+
+            $("#address_delete_model").find('#charge_id')[0].value = charge_id
+            $("#address_delete_model").find('#address_pin')[0].value = address_pin
+            $("#address_delete_model").find('#amount')[0].value = amount
+
+          });
+          
+          // weight delivery charges
+          $('.weight_charges_table tbody').on('click','.update_button',function(){
+
+            var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+            var charge_id = row.find('td:eq(0)').text()
+            var start_wt = row.find('td:eq(1)').text()
+            var end_wt = row.find('td:eq(2)').text()
+            var amount = row.find('td:eq(3)').text()
+
+
+            $("#weight_update_model").find('#charge_id')[0].value = charge_id
+            $("#weight_update_model").find('#start_weight')[0].value = start_wt
+            $("#weight_update_model").find('#end_weight')[0].value = end_wt
+            $("#weight_update_model").find('#amount')[0].value = amount
+
+          });
+
+            $('.weight_charges_table tbody').on('click','.delete_button',function(){
+
+              var row = $(this).closest("tr") // Finds the closest row <tr> 
+
+              var charge_id = row.find('td:eq(0)').text()
+              var start_wt = row.find('td:eq(1)').text()
+              var end_wt = row.find('td:eq(2)').text()
+              var amount = row.find('td:eq(3)').text()
+
+
+              $("#weight_delete_model").find('#charge_id')[0].value = charge_id
+              $("#weight_delete_model").find('#start_weight')[0].value = start_wt
+              $("#weight_delete_model").find('#end_weight')[0].value = end_wt
+              $("#weight_delete_model").find('#amount')[0].value = amount
+
+            });
 
 
       });

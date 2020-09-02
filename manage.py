@@ -3,7 +3,8 @@ import os
 
 from app import create_app, db
 from app.models import Product, Unit,\
-  ProductType, Admin, Stock , StatusCatalog, DeliveryCharge , ShopDetails
+  ProductType, Admin, Stock , StatusCatalog, DeliveryCharge ,WeightDeliveryCharge, ShopDetails,\
+  PaymentMethod, PaymentStatus
 
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
@@ -33,9 +34,14 @@ def deploy():
   ShopDetails.insert_shop_details()
   Admin.insert_default_admin()
   StatusCatalog.insert_order_status()
+  PaymentMethod.insert_payment_method()
+  PaymentStatus.insert_payment_status()
+  
   Unit.insert_units()
   DeliveryCharge.insert_default_charge()
+  WeightDeliveryCharge.insert_default_charge()
   ProductType.insert_categories()
+  
 
 
 

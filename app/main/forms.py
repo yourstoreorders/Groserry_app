@@ -9,14 +9,13 @@ class LoginForm(FlaskForm):
   submit = SubmitField('Log In')
 
 
-
 # Product Forms
 class AddProduct(FlaskForm):
   product_name   = StringField('Name', validators=[DataRequired(), Length(1, 64)])
   product_image  = FileField('Picture',validators=[FileAllowed(['png','jpg','jpeg'])])
   product_description   = StringField('Description', validators=[Length(1, 64)])
   price_per_unit  = FloatField('Price', validators=[DataRequired()])
-  product_weight = IntegerField('Weight', default = 0, validators=[DataRequired()])
+  product_weight = IntegerField('Weight', default = 0)
   
   unit_id = SelectField('Unit',choices=[(1,'Kilogram'),(2,'Liter')],coerce= int)
   product_type_id = SelectField('Category',choices=[(1,'fruits'),(2,'vegetables')],coerce= int)
@@ -83,25 +82,49 @@ class DeleteOrder(FlaskForm):
 
 
 
-  # Charge Forms
-class AddCharge(FlaskForm):
+# Address Charge Forms
+class AddressAddCharge(FlaskForm):
   address_pin   = StringField('PIN', validators=[DataRequired(), Length(6, 6)])
-  amount   = FloatField('Amount', validators=[DataRequired()])
+  amount   = FloatField('Amount', default = 0)
   submit1 = SubmitField('Add Delivery Charge')
 
-class UpdateCharge(FlaskForm):
+class AddressUpdateCharge(FlaskForm):
   charge_id = IntegerField('Id',validators=[DataRequired()],render_kw={'readonly':'true'})
   address_pin   = StringField('PIN', validators=[DataRequired(), Length(6, 6)])
-  amount   = FloatField('Amount', validators=[DataRequired()])
+  amount   = FloatField('Amount', default = 0)
   
   submit2 = SubmitField('Update Delivery Charge')
 
-class DeleteCharge(FlaskForm):
+class AddressDeleteCharge(FlaskForm):
   charge_id = HiddenField('Id',validators=[DataRequired()], render_kw={'readonly':'true'})
   address_pin   = StringField('PIN', validators=[DataRequired(), Length(6, 6)],render_kw={'readonly':'true'})
-  amount   = FloatField('Amount', validators=[DataRequired()],render_kw={'readonly':'true'})
+  amount   = FloatField('Amount',default = 0,render_kw={'readonly':'true'})
   
   submit3 = SubmitField('Delete Delivery Charge')
+
+
+# Weight Charge Forms
+class WeightAddCharge(FlaskForm):
+  start_weight = IntegerField('Start Weight',default=0)
+  end_weight = IntegerField('End Weight',validators=[DataRequired()])
+  amount   = FloatField('Amount',default = 0)
+  submit4 = SubmitField('Add Delivery Charge')
+
+class WeightUpdateCharge(FlaskForm):
+  charge_id = IntegerField('Id',validators=[DataRequired()],render_kw={'readonly':'true'})
+  start_weight = IntegerField('Start Weight',default = 0)
+  end_weight =IntegerField('End Weight',validators=[DataRequired()])
+  amount   = FloatField('Amount', default = 0)
+  
+  submit5 = SubmitField('Update Delivery Charge')
+
+class WeightDeleteCharge(FlaskForm):
+  charge_id = HiddenField('Id',validators=[DataRequired()], render_kw={'readonly':'true'})
+  start_weight = IntegerField('Start Weight',default = 0)
+  end_weight = IntegerField('End Weight',validators=[DataRequired()])
+  amount   = FloatField('Amount', default = 0,render_kw={'readonly':'true'})
+  
+  submit6 = SubmitField('Delete Delivery Charge')
 
 
 #Setting Forms
