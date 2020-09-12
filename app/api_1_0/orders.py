@@ -152,7 +152,7 @@ def new_order():
 
 
     shop = ShopDetails.query.all()[0]
-    # send_email(shop.shop_email,'New Order Received','email_template',data)
+    send_email(shop.shop_email,'New Order Received','email_template',data)
     print(data)
     return jsonify(data)
 
