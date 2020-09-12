@@ -142,7 +142,7 @@ def new_order():
     data['total_amount'] = str(float(newPlacedOrder.delivery_charge) +\
        float(data['ordered_items']["sub_total"]) + weight_delivery_charge)
 
-    data['order_details'] = newPlacedOrder.to_json()
+    
     
     newPlacedOrder.delivery_charge = float(newPlacedOrder.delivery_charge) + weight_delivery_charge
     newPlacedOrder.total_amount = float(data['total_amount'])
@@ -150,6 +150,7 @@ def new_order():
     db.session.add(newPlacedOrder)
     db.session.commit()
 
+    data['order_details'] = newPlacedOrder.to_json()
 
     shop = ShopDetails.query.all()[0]
     send_email(shop.shop_email,'New Order Received','email_template',data)
