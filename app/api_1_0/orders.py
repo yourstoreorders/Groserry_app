@@ -133,22 +133,27 @@ def new_order():
     else:
       weight_delivery_charge = float(element.amount)
     
+    data['delivery_charges'] = {
+      "address_charge":str(float(newPlacedOrder.delivery_charge)),
+      "weight_charge": str(weight_delivery_charge)
+      }
+    
 
-    data['total_amount'] = float(newPlacedOrder.delivery_charge) +\
-       float(data['ordered_items']["sub_total"]) + weight_delivery_charge
+    data['total_amount'] = str(float(newPlacedOrder.delivery_charge) +\
+       float(data['ordered_items']["sub_total"]) + weight_delivery_charge)
 
     data['order_details'] = newPlacedOrder.to_json()
     
-    newPlacedOrder.delivery_charge = float(newPlacedOrder.delivery_charge) + weight_delivery_charge
-    newPlacedOrder.total_amount = float(data['total_amount'])
+    newPlacedOrder.delivery_charge = str(float(newPlacedOrder.delivery_charge) + weight_delivery_charge)
+    newPlacedOrder.total_amount = str(float(data['total_amount']))
 
     db.session.add(newPlacedOrder)
     db.session.commit()
 
 
     shop = ShopDetails.query.all()[0]
-    send_email(shop.shop_email,'New Order Received','email_template',data)
-
+    # send_email(shop.shop_email,'New Order Received','email_template',data)
+    print(data)
     return jsonify(data)
 
 
@@ -171,9 +176,9 @@ def order_items(order_id):
     itemObj['product_id'] = item.id
     itemObj['product_name'] = item.product_name
     itemObj['quantity'] = item.quantity
-    itemObj['product_weight'] = item.product_weight
+    itemObj['product_weight'] = float(item.product_weight)
     
-    weight = float(item.product_weight)
+    weight = float(item.product_weight)*int(item.quantity)
     total_weight += weight
     
     price = float(item.quantity) * float(item.price_per_unit)  

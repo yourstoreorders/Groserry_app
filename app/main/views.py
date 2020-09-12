@@ -151,7 +151,8 @@ def products():
     element.unit_id = update_form_data.get('unit_id', element.unit_id)
     element.product_type_id = update_form_data.get('product_type_id', element.product_type_id)
     element.product_weight = update_form_data.get('product_weight', element.product_weight)
-
+    
+    
     try:
         db.session.add(element)
         db.session.commit()

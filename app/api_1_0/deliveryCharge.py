@@ -35,9 +35,9 @@ def get_delivery_charge_for_address(pin):
   return jsonify({ 'charge': "None" if element is None else element.to_json() })
 
 
-@api.route('/deliverychargeforweight/<int:weight>')
+@api.route('/deliverychargeforweight/<float:weight>')
 def get_delivery_charge_for_weight(weight):
-  weight = int(weight)
+  weight = float(weight)
   element = WeightDeliveryCharge.get_delivery_charge(weight)
 
   if element is None:

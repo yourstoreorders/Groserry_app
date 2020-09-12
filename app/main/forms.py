@@ -12,10 +12,10 @@ class LoginForm(FlaskForm):
 # Product Forms
 class AddProduct(FlaskForm):
   product_name   = StringField('Name', validators=[DataRequired(), Length(1, 64)])
-  product_image  = FileField('Picture',validators=[FileAllowed(['png','jpg','jpeg'])])
+  product_image  = FileField('Picture',validators=[DataRequired(),FileAllowed(['png','jpg','jpeg'])])
   product_description   = StringField('Description', validators=[Length(1, 64)])
   price_per_unit  = FloatField('Price', validators=[DataRequired()])
-  product_weight = IntegerField('Weight', default = 0)
+  product_weight = FloatField('Weight', default = 0)
   
   unit_id = SelectField('Unit',choices=[(1,'Kilogram'),(2,'Liter')],coerce= int)
   product_type_id = SelectField('Category',choices=[(1,'fruits'),(2,'vegetables')],coerce= int)
@@ -29,7 +29,7 @@ class UpdateProduct(FlaskForm):
   product_new_image  = FileField('New Picture',validators=[FileAllowed(['png','jpg'])])
   product_description   = StringField('Description', validators=[Length(1, 64)])
   price_per_unit  = FloatField('Price', validators=[DataRequired()])
-  product_weight = IntegerField('Weight', validators=[DataRequired()])
+  product_weight = FloatField('Weight', validators=[DataRequired()])
   
   unit_id = SelectField('Unit',choices=[(1,'Kilogram'),(2,'Liter')],coerce= int)
   product_type_id = SelectField('Category',choices=[(1,'fruits'),(2,'vegetables')],coerce= int)

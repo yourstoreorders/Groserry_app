@@ -28,7 +28,7 @@ class Product(db.Model):
   __tablename__ = "products"
   id = db.Column(db.Integer, primary_key=True)
   product_name =  db.Column(db.String(128), unique=True, nullable=False)
-  product_weight = db.Column(db.Integer,default=0, nullable=False)
+  product_weight = db.Column(db.Numeric(10,3),default=0, nullable=False)
   product_description = db.Column(db.String(255), nullable=False)
   price_per_unit = db.Column(db.Numeric(10,2),nullable=False)
   product_image = db.Column(db.String(256),nullable=False)
@@ -56,7 +56,7 @@ class Product(db.Model):
            'product_image': os.path.join(url_for('static',filename='product_images',_external=True)\
               , self.product_image),
            'product_description': self.product_description,
-           'product_weight':str(self.product_weight),
+           'product_weight':str(float(self.product_weight)),
            'price_per_unit': str(self.price_per_unit),
            'unit': Unit.get_unit(self.unit_id).unit_name,
            'product_type': ProductType.get_productType(self.product_type_id).type_name,
@@ -73,6 +73,8 @@ class Product(db.Model):
     unit_id = dict_post['unit_id']
     product_type_id = dict_post['product_type_id']
     product_image = dict_post['product_image']
+
+    print(weight)
 
     if (name is None or name == ''):
         raise ValidationError('doesnot have a name')
@@ -101,7 +103,7 @@ class Product(db.Model):
     return Product(product_name=name,
                   product_description =  description,
                   price_per_unit = float(price),
-                  product_weight=  int(weight),
+                  product_weight=  float(weight),
                   unit_items = unit,
                   product_items = product_type,
                   product_image = product_image)
@@ -139,7 +141,7 @@ class Product(db.Model):
     return Product(product_name=name,
                   product_description =  description,
                   price_per_unit = float(price),
-                  product_weight = int(weight),
+                  product_weight = float(weight),
                   unit_items = unit,
                   product_items = product_type)
 
