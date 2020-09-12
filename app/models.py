@@ -518,7 +518,7 @@ class WeightDeliveryCharge(db.Model):
 
   @staticmethod
   def get_delivery_charge(weight):
-    weight = int(weight)
+    weight = float(weight)
     return  WeightDeliveryCharge.query.filter(
       and_(
         WeightDeliveryCharge.start_weight <= weight,
