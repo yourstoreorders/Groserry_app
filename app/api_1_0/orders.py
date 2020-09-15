@@ -126,7 +126,6 @@ def new_order():
     data['ordered_items'] = order_items(newPlacedOrder.id)
 
     total_wt = float(data['ordered_items']['total_weight'])
-
     element = WeightDeliveryCharge.get_delivery_charge(total_wt)
     if element is None:
       weight_delivery_charge = 0
