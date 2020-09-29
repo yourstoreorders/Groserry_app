@@ -19,6 +19,7 @@ class Config:
     GROCERY_MAIL_SUBJECT_PREFIX = ''
     FLASKY_MAIL_SENDER = 'Grocery Store'
     ORDER_MAIL_RECEIVER = os.environ.get('ORDER_MAIL_RECEIVER')
+    WTF_CSRF_TIME_LIMIT = None
     
     STORE_NAME = "My Shop Bucket"
     # FLASKY_ADMIN = os.environ.get('GROCERY_APP_ADMIN')
